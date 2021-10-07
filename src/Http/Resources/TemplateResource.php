@@ -2,7 +2,6 @@
 
 namespace Orlyapps\NovaTexteditor\Http\Resources;
 
-
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class TemplateResource extends JsonResource
@@ -18,7 +17,7 @@ class TemplateResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
-            'text' => $this->text
+            'text' => $this->text,
         ];
     }
 }

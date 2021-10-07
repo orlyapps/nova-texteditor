@@ -21,6 +21,7 @@ class TemplateController
                 $query->whereNull('user_id')->orWhere('user_id', $request->user()->id);
             })
             ->get();
+
         return TemplateResource::collection($templates);
     }
 }

@@ -38,13 +38,14 @@ class TextEditor extends Field
     public function defaultVariables()
     {
         return [
-            'heute' => '"' . now()->format('d.m.Y') . '"'
+            'heute' => '"' . now()->format('d.m.Y') . '"',
         ];
     }
 
     public function resolveVariables($callback)
     {
         $this->variableResolver = $callback;
+
         return $this;
     }
 
@@ -136,6 +137,7 @@ class TextEditor extends Field
                 }
                 $expression = stripslashes($expression);
             }
+
             try {
                 $expression = trim(str_replace(['{{', '}}'], '', $expression));
                 $results->push($phpexecjs->evalJs($this->jsFunctions() . $expression));
@@ -149,6 +151,7 @@ class TextEditor extends Field
         foreach ($expressions as $index => $expression) {
             $attributeValue = str_replace($expression, $results[$index], $attributeValue);
         }
+
         return $attributeValue;
     }
 

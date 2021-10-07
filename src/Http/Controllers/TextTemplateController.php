@@ -2,9 +2,9 @@
 
 namespace Orlyapps\NovaTexteditor\Http\Controllers;
 
-use Orlyapps\NovaTexteditor\Models\TextTemplate;
 use Illuminate\Http\Request;
 use Orlyapps\NovaTexteditor\Http\Resources\TextTemplateResource;
+use Orlyapps\NovaTexteditor\Models\TextTemplate;
 
 class TextTemplateController
 {

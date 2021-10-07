@@ -15,10 +15,10 @@ class SalutationNode extends \ProseMirrorToHtml\Nodes\Node
             'x-orlyapps-salutation' => [
                 'attrs' => [
                     ':contact' => '$contact',
-                    'type' => $this->node->attrs->type ?? 'lastname'
+                    'type' => $this->node->attrs->type ?? 'lastname',
                 ],
-                'tag' => 'x-orlyapps-salutation'
-            ]
+                'tag' => 'x-orlyapps-salutation',
+            ],
         ];
     }
 

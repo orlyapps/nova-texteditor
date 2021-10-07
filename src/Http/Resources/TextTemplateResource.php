@@ -18,7 +18,7 @@ class TextTemplateResource extends JsonResource
             'id' => $this->id,
             'shortcode' => $this->shortcode,
             'name' => $this->name,
-            'text' => $this->text
+            'text' => $this->text,
         ];
     }
 }
