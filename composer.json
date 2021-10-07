@@ -1,24 +1,25 @@
 {
-    "name": ":vendor_slug/:package_slug",
-    "description": ":package_description",
+    "name": "orlyapps/nova-texteditor",
+    "description": "Laravel Nova Text Editor with text templates, text blocks and dynamic variable",
     "keywords": [
-        ":vendor_name",
+        "orlyapps",
         "laravel",
-        ":package_slug"
+        "nova-texteditor"
     ],
-    "homepage": "https://github.com/:vendor_slug/:package_slug",
+    "homepage": "https://github.com/orlyapps/nova-texteditor",
     "license": "MIT",
     "authors": [
         {
-            "name": ":author_name",
-            "email": "author@domain.com",
+            "name": "Florian Strauß",
+            "email": "fs@orlyapps.de",
             "role": "Developer"
         }
     ],
     "require": {
-        "php": "^8.0",
+        "php": "^7.4|^8.0",
         "spatie/laravel-package-tools": "^1.4.3",
-        "illuminate/contracts": "^8.37"
+        "illuminate/contracts": "^8.37",
+        "ueberdosis/prosemirror-to-html": "^2.4"
     },
     "require-dev": {
         "nunomaduro/collision": "^5.3",
@@ -30,13 +31,13 @@
     },
     "autoload": {
         "psr-4": {
-            "VendorName\\Skeleton\\": "src",
-            "VendorName\\Skeleton\\Database\\Factories\\": "database/factories"
+            "Orlyapps\\NovaTexteditor\\": "src",
+            "Orlyapps\\NovaTexteditor\\Database\\Factories\\": "database/factories"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "VendorName\\Skeleton\\Tests\\": "tests"
+            "Orlyapps\\NovaTexteditor\\Tests\\": "tests"
         }
     },
     "scripts": {
@@ -49,10 +50,10 @@
     "extra": {
         "laravel": {
             "providers": [
-                "VendorName\\Skeleton\\SkeletonServiceProvider"
+                "Orlyapps\\NovaTexteditor\\NovaTexteditorServiceProvider"
             ],
             "aliases": {
-                "Skeleton": "VendorName\\Skeleton\\SkeletonFacade"
+                "NovaTexteditor": "Orlyapps\\NovaTexteditor\\NovaTexteditorFacade"
             }
         }
     },
