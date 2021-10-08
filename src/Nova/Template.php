@@ -2,18 +2,18 @@
 
 namespace Orlyapps\NovaTexteditor\Nova;
 
-use Orlyapps\NovaTexteditor\Nova\Fields\TextEditor;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Resource;
+use Orlyapps\NovaTexteditor\Nova\Fields\TextEditor;
 
 class Template extends Resource
 {
     /**
      * Sort Index (Custom)
      *
-     * @var integer
+     * @var int
      */
     public static function index()
     {
@@ -74,7 +74,7 @@ class Template extends Resource
      * @var array
      */
     public static $search = [
-        'name'
+        'name',
     ];
 
     /**

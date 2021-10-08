@@ -13,7 +13,7 @@ class TextTemplate extends Resource
     /**
      * Sort Index (Custom)
      *
-     * @var integer
+     * @var int
      */
     public static function index()
     {
@@ -84,7 +84,7 @@ class TextTemplate extends Resource
      * @var array
      */
     public static $search = [
-        'id', 'name'
+        'id', 'name',
     ];
 
     /**

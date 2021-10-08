@@ -15,10 +15,10 @@ class SignatureNode extends \ProseMirrorToHtml\Nodes\Node
             'x-orlyapps-signature' => [
                 'attrs' => [
                     ':user' => '$user',
-                    'type' => $this->node->attrs->type ?? 'user'
+                    'type' => $this->node->attrs->type ?? 'user',
                 ],
-                'tag' => 'x-orlyapps-signature'
-            ]
+                'tag' => 'x-orlyapps-signature',
+            ],
         ];
     }
 

@@ -20,10 +20,10 @@ class ParagraphNode extends \ProseMirrorToHtml\Nodes\Node
             return [
                 'p' => [
                     'attrs' => [
-                        'class' => 'text-' . $this->node->attrs->textAlign
+                        'class' => 'text-' . $this->node->attrs->textAlign,
                     ],
-                    'tag' => 'p'
-                ]
+                    'tag' => 'p',
+                ],
             ];
         } else {
             return 'p';

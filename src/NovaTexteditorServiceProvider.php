@@ -2,13 +2,13 @@
 
 namespace Orlyapps\NovaTexteditor;
 
-use Spatie\LaravelPackageTools\Package;
-use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Laravel\Nova\Nova;
 use Orlyapps\NovaTexteditor\Nova\Template;
 use Orlyapps\NovaTexteditor\Nova\TextTemplate;
 use Orlyapps\NovaTexteditor\View\Components\Salutation;
 use Orlyapps\NovaTexteditor\View\Components\Signature;
+use Spatie\LaravelPackageTools\Package;
+use Spatie\LaravelPackageTools\PackageServiceProvider;
 
 class NovaTexteditorServiceProvider extends PackageServiceProvider
 {
@@ -33,7 +33,7 @@ class NovaTexteditorServiceProvider extends PackageServiceProvider
     {
         Nova::resources([
             TextTemplate::class,
-            Template::class
+            Template::class,
         ]);
         Nova::serving(function () {
             Nova::script('nova-texteditor', __DIR__ . '/../dist/js/nova.js');
