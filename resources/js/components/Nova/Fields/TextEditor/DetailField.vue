@@ -1,8 +1,6 @@
 <template>
     <div class="w-full detail-full">
-        <div class="pt-6 pb-3 px-8 border-b border-50">
-            <h2 class="text-90 font-normal text-xl">{{ field.name }}</h2>
-        </div>
+
         <div class="document">
             <div class="page">
                 <div class="inner">

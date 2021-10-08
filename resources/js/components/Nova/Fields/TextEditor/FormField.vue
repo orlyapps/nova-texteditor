@@ -321,7 +321,6 @@ import Paragraph from "./Paragraph";
 import PageBreak from "./PageBreak";
 import Salutation from "./Salutation";
 
-
 export default {
     mixins: [FormField, HandlesValidationErrors],
 
@@ -668,6 +667,7 @@ p.is-empty:first-child::before {
     padding-top: 1.5rem;
     padding-bottom: 1.5rem;
 }
+
 .ProseMirror {
     white-space: pre-wrap;
     &:focus {
@@ -683,7 +683,7 @@ p.is-empty:first-child::before {
 .ProseMirror ol,
 .ProseMirror blockquote,
 .ProseMirror pre {
-    margin-bottom: 0.75rem;
+    margin-bottom: 1.25rem;
 }
 
 .ProseMirror ul,
