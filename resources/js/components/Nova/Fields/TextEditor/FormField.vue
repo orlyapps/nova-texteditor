@@ -96,12 +96,14 @@
                     </div>
                 </div>
 
-                <div class="document">
+                <div class=" bg-80 py-16">
                     <editor-menu-bar
                         :editor="editor"
                         v-slot="{ commands, isActive, focused }"
                     >
-                        <div class="flex editor-menu-bar">
+                        <div
+                            class="flex editor-menu-bar w-2/3 m-auto mb-6 bg-white"
+                        >
                             <button
                                 :class="{
                                     'btn-primary': isActive.bold(),
@@ -198,7 +200,13 @@
                                     <i class="far fa-h3"></i>
                                 </button>
                             </div>
-
+                            <div class="border-r border-60">
+                                <button
+                                    @click.prevent.stop="commands['page-break']"
+                                >
+                                    <i class="far fa-page-break"></i>
+                                </button>
+                            </div>
                             <button
                                 :class="{
                                     'btn-primary': isActive.bullet_list(),
@@ -206,7 +214,7 @@
                                 }"
                                 @click.prevent.stop="commands.bullet_list"
                             >
-                                <i class="far list-ul"></i>
+                                <i class="far fa-list-ul"></i>
                             </button>
 
                             <button
@@ -216,11 +224,11 @@
                                 }"
                                 @click.prevent.stop="commands.ordered_list"
                             >
-                                <i class="far list-ol"></i>
+                                <i class="far fa-list-ol"></i>
                             </button>
                         </div>
                     </editor-menu-bar>
-                    <div class="page">
+                    <div class="page w-2/3 m-auto">
                         <div class="inner">
                             <editor-content
                                 autocomplete="off"
@@ -235,7 +243,9 @@
                             class="bg-info-light px-6 py-4 text-sm border-t border-info"
                             v-if="field.blocks"
                         >
-                            <h3 class="text-info-dark mb-3">Variable Blöcke</h3>
+                            <h3 class="text-info-dark mb-3">
+                                Variable Blöcke
+                            </h3>
                             <p class="mb-2">
                                 Diese Blöcke können im Text platziert werden und
                                 werden beim drucken automatisch durch den Inhalt
@@ -268,7 +278,7 @@
                                 <i>Strg+Z</i>
                                 <strong>Rückgängig</strong> gemacht werden.
                             </p>
-                            <p class>
+                            <p v-if="field.variables">
                                 Folgende Platzhalter stehen zur Verfügung:
                                 <strong
                                     v-for="variable in field.variables"
@@ -580,6 +590,7 @@ export default {
         },
         async onPreview() {
             const updateForm = this.$parent.$parent.$parent.$parent;
+            console.log(updateForm);
             await updateForm.submitViaUpdateResourceAndContinueEditing();
             let win = window.open(
                 this.field.previewUrl + this.resourceId,
@@ -630,10 +641,6 @@ export default {
 }
 
 .editor-menu-bar {
-    margin: 0px auto;
-    background: #fff;
-    padding-left: 1rem;
-    padding-right: 1rem;
     button {
         padding: 0.75rem 1rem;
     }

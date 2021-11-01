@@ -79,7 +79,10 @@ class TextEditor extends Field
     {
         return $this->withMeta(['templateCategory' => $templateCategory]);
     }
-
+    public function showHelp()
+    {
+        return $this->withMeta(['showHelp' => true]);
+    }
     public function enablePreview(string $previewUrl)
     {
         return $this->withMeta(['previewUrl' => $previewUrl]);

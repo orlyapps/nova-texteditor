@@ -1,8 +1,8 @@
 <template>
     <div class="w-full detail-full">
 
-        <div class="document">
-            <div class="page">
+        <div class="bg-80 py-16">
+            <div class="page w-2/3 m-auto">
                 <div class="inner">
                     <editor-content :editor="editor" />
                 </div>
@@ -86,4 +86,24 @@ export default {
     margin-bottom: -0.75rem;
     width: calc(100% + 3rem);
 }
+
+.page {
+    background: white;
+    display: block;
+    display: flex;
+    flex-direction: column;
+
+    page-break-after: always;
+}
+
+
+.page .inner {
+    outline: none !important;
+    box-shadow: none !important;
+    padding-left: 2rem;
+    padding-right: 2rem;
+    padding-top: 1.5rem;
+    padding-bottom: 1.5rem;
+}
+
 </style>

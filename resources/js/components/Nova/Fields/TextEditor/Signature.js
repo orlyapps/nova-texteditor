@@ -43,7 +43,7 @@ export default class Signature extends Node {
                 <div class=""><span class="font-bold">Freundliche Grüße</span> und</div>
                 <select id="location" :disabled="!view.editable" class="form-select block  pl-3 pr-10 py-2 text-base leading-6 border-gray-300" :value="node.attrs.type"  @change="onChange($event)">
                     <option selected value="user">Signatur Benutzer</option>
-                    <option selected value="team">Signatur Team</option>
+
                 </select>
             </div>
             `
