@@ -1,5 +1,14 @@
 let mix = require("laravel-mix");
 
-mix.js("resources/js/nova.js", "dist/js")
-    .vue()
-    .postCss("resources/css/nova.css", "dist/css");
+mix.setPublicPath("dist")
+    .js("resources/js/field.js", "js")
+    .vue({ version: 3 })
+    .webpackConfig({
+        externals: {
+            vue: "Vue"
+        },
+        output: {
+            uniqueName: "vendor/package"
+        }
+    })
+    .postCss("resources/css/tiptap.css", "css");
