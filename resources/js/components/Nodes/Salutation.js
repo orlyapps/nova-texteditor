@@ -13,8 +13,8 @@ export default Node.create({
             type: {
                 default: "du",
             },
-            ":user": {
-                default: "$user",
+            ":contact": {
+                default: "$contact",
             },
         };
     },

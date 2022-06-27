@@ -14,6 +14,8 @@
                 @change="onChange($event)"
             >
                 <option selected value="du">Hallo Erika</option>
+                <option value="dear">Liebe Erika</option>
+                <option value="dearLastname">Liebe Erika Musterfrau</option>
                 <option value="lastname">Sehr geehrte Frau Musterfrau</option>
                 <option value="firstname">
                     Sehr geehrte Frau Erika Musterfrau
