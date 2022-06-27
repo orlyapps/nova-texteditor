@@ -1,7 +1,7 @@
 <template>
     <node-view-wrapper class="salutation">
         <div
-            class="drag-handle flex items-center justify-between p-2 px-6 bg-gray-100 border-primary-500"
+            class="drag-handle flex items-center justify-between p-2 px-6 bg-gray-100 border-primary-500 mt-3"
             contenteditable="false"
             draggable="true"
             data-drag-handle
@@ -11,6 +11,7 @@
                 id="location"
                 class="block form-control form-select form-select-bordered"
                 :value="node.attrs.type"
+                @change="onChange($event)"
             >
                 <option selected value="du">Hallo Erika</option>
                 <option value="lastname">Sehr geehrte Frau Musterfrau</option>
@@ -32,5 +33,12 @@ export default {
         NodeViewContent,
     },
     props: nodeViewProps,
+    methods: {
+        onChange(event) {
+            this.updateAttributes({
+                type: event.target.value,
+            });
+        },
+    },
 };
 </script>

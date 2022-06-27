@@ -10,15 +10,7 @@ use Laravel\Nova\Http\Requests\NovaRequest;
 
 class TextTemplate extends Resource
 {
-    /**
-     * Sort Index (Custom)
-     *
-     * @var int
-     */
-    public static function index()
-    {
-        return 99;
-    }
+
 
     /**
      * The model the resource corresponds to.
@@ -27,12 +19,6 @@ class TextTemplate extends Resource
      */
     public static $model = \Orlyapps\NovaTexteditor\Models\TextTemplate::class;
 
-    /**
-     * The resource group name
-     *
-     * @var string
-     */
-    public static $group = 'Einstellungen';
 
     /**
      * Indicates if the resoruce should be globally searchable.
@@ -41,15 +27,7 @@ class TextTemplate extends Resource
      */
     public static $globallySearchable = false;
 
-    /**
-     * Get the icon for the navigation
-     *
-     * @return string
-     */
-    public static function icon()
-    {
-        return 'keyboard';
-    }
+
 
     /**
      * Get the displayble label of the resource.

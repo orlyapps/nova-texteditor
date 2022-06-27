@@ -11,27 +11,6 @@ use Laravel\Nova\Http\Requests\NovaRequest;
 
 class Template extends Resource
 {
-    /**
-     * Sort Index (Custom)
-     *
-     * @var int
-     */
-    public static function index()
-    {
-        return 99;
-    }
-
-    /**
-     * Get the icon for the navigation
-     *
-     * @return string
-     */
-    public static function icon()
-    {
-        return 'file-invoice';
-    }
-
-    public static $group = 'Einstellungen';
 
     public static $globallySearchable = false;
 
@@ -87,7 +66,7 @@ class Template extends Resource
     public function fields(NovaRequest $request)
     {
         return [
-            Select::make(_('Category'), 'category')
+            Select::make(__('Category'), 'category')
                 ->options(config('nova-texteditor.categories'))
                 ->displayUsingLabels()
                 ->help(__('The template category determines the use of the template'))
@@ -95,8 +74,8 @@ class Template extends Resource
             Text::make(__('Name'), 'name')->sortable()->rules('required'),
             TextEditor::make(__('Vorlage'), 'text')
                 ->blocks([
-                    'salutation' => 'Anrede',
-                    'signature' => 'Signatur',
+                    'orlyapps-salutation' => 'Anrede',
+                    'orlyapps-signature' => 'Signatur',
                 ])
                 ->hideFromIndex(),
         ];

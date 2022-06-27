@@ -74,12 +74,51 @@ class TextEditor extends Field
     {
         return $this->withMeta(['templateCategory' => $templateCategory]);
     }
+
     public function showHelp()
     {
         return $this->withMeta(['showHelp' => true]);
     }
+
     public function enablePreview(string $previewUrl)
     {
         return $this->withMeta(['previewUrl' => $previewUrl]);
+    }
+
+    /**
+     * Hydrate the given attribute on the model based on the incoming request.
+     *
+     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param  string  $requestAttribute
+     * @param  object  $model
+     * @param  string  $attribute
+     * @return void
+     */
+    protected function fillAttributeFromRequest(NovaRequest $request, $requestAttribute, $model, $attribute)
+    {
+        /**
+         * Variabeln erst nach dem Speichern evaluieren und ersetzen
+         */
+        \Event::listen('eloquent.saved: ' . get_class($model), function ($savedModel) use ($attribute, $request, $requestAttribute) {
+            $value = $this->evaluateVariables($request[$requestAttribute], $savedModel);
+            $savedModel->withoutEvents(function () use ($value, $attribute, $savedModel) {
+                $fresh = $savedModel->fresh();
+                $fresh->{$attribute} = $value;
+                $fresh->save();
+            });
+        });
+    }
+    protected function evaluateVariables($attributeValue, $model)
+    {
+        if ($this->variableResolver == null) {
+            return $attributeValue;
+        }
+
+        $variables = array_merge($this->defaultVariables(), call_user_func($this->variableResolver, $model));
+        foreach ($variables as $variable => $value) {
+            $attributeValue = str_replace('{{' . $variable . '}}', $value, $attributeValue);
+            $attributeValue = str_replace('{{ ' . $variable . ' }}', $value, $attributeValue);
+        }
+        return $attributeValue;
     }
 }

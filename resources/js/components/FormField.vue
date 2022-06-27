@@ -11,7 +11,7 @@
                     class="w-full overflow-break z-10 bg-gray-100 rounded"
                     style="position: sticky; top: 0; left: 0"
                 >
-                    <div class="p-1">
+                    <div class="p-1 flex items-center">
                         <div
                             v-for="button in buttons"
                             :key="'button-' + button"
@@ -20,9 +20,7 @@
                             }"
                         >
                             <template v-if="button == '|'">
-                                <button
-                                    class="w-[1px] h-6 relative top-2 mx-1 bg-gray-400"
-                                ></button>
+                                <div class="w-3">&nbsp;&nbsp;</div>
                             </template>
 
                             <template v-else-if="button == 'br'"> </template>
@@ -51,6 +49,40 @@
                                 </normal-button>
                             </template>
                         </div>
+                        <div>
+                            <div class="flex">
+                                <Dropdown
+                                    class="bg-30 hover:bg-40 mr-3 rounded"
+                                    v-if="
+                                        templates.length &&
+                                        field.templateCategory
+                                    "
+                                >
+                                    <DropdownTrigger class="px-3">
+                                        <h3
+                                            class="flex items-center"
+                                        >
+                                            Vorlage auswählen
+                                        </h3>
+                                    </DropdownTrigger>
+                                    <template #menu>
+                                        <DropdownMenu
+                                            width="240"
+                                        >
+                                            <DropdownMenuItem
+                                                @click.stop="
+                                                    selectTemplate(template)
+                                                "
+                                                v-for="template in templates"
+                                                :key="template.id"
+                                            >
+                                                {{ template.name }}
+                                            </DropdownMenuItem>
+                                        </DropdownMenu>
+                                    </template>
+                                </Dropdown>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -60,6 +92,47 @@
                     v-show="mode == 'editor'"
                 >
                     <editor-content :editor="editor" />
+                </div>
+                <div
+                    class="bg-primary-100 px-6 py-3 text-sm mt-3 rounded-lg"
+                    v-if="field.blocks"
+                >
+                    <h3 class="text-gray-700 mb-1 font-bold">
+                        Variable Blöcke
+                    </h3>
+                    <p class="mb-2">
+                        Diese Blöcke können im Text platziert werden und werden
+                        beim automatisch durch den Inhalt ersetzt.
+                    </p>
+                    <button
+                        v-for="(name, key) in field.blocks"
+                        v-bind:key="key"
+                        @click.prevent="addElement(key)"
+                        type="button"
+                        class="mr-1 inline-flex items-center px-3 py-2 border border-gray-300 text-xs leading-4 font-medium rounded text-gray-700 bg-white hover:bg-primary-100 hover:text-primary-500 hover:border-primary-500"
+                    >
+                        {{ name }}
+                    </button>
+                </div>
+                <div
+                    v-if="field.showHelp"
+                    class="bg-primary-100 px-6 py-4 text-sm"
+                >
+                    <p class="mb-2">
+                        Änderungen können per Tastenkürze
+                        <i>Strg+Z</i>&nbsp;<strong>Rückgängig</strong> gemacht
+                        werden.
+                    </p>
+                    <p v-if="field.variables">
+                        Folgende Platzhalter stehen zur Verfügung:
+                        <strong
+                            class="cursor-pointer hover:text-primary-500"
+                            @click.prevent="addVariable(variable)"
+                            v-for="variable in field.variables"
+                            v-html="'{{ ' + variable + ' }}&nbsp;'"
+                            :key="variable"
+                        ></strong>
+                    </p>
                 </div>
             </div>
         </template>
@@ -94,8 +167,9 @@ import HeadingButtons from "./buttons/HeadingButtons";
 import TextAlignButtons from "./buttons/TextAlignButtons";
 import HistoryButtons from "./buttons/HistoryButtons";
 import BaseButton from "./buttons/BaseButton.vue";
-import Salutation from './Nodes/Salutation'
-import Dropcursor from '@tiptap/extension-dropcursor'
+import Salutation from "./Nodes/Salutation";
+import Signature from "./Nodes/Signature";
+import Dropcursor from "@tiptap/extension-dropcursor";
 
 import { FormField, HandlesValidationErrors } from "laravel-nova";
 
@@ -117,6 +191,7 @@ export default {
             editor: null,
             mode: "editor",
             placeholder: "",
+            templates: [],
         };
     },
 
@@ -134,13 +209,24 @@ export default {
         buttons() {
             let tmpButtons = this.field.buttons
                 ? this.field.buttons
-                : ["bold", "italic"];
+                : [
+                      "bold",
+                      "italic",
+                      "strike",
+                      "|",
+                      "underline",
+                      "highlight",
+                      "|",
+                      "bulletList",
+                      "orderedList",
+                      "|",
+                      "blockquote",
+                      "hardBreak",
+                      "textAlign",
+                      "history",
+                  ];
 
-            return _.map(tmpButtons, function (button) {
-                return button == "|" || button == "br"
-                    ? button
-                    : _.camelCase(button);
-            });
+            return tmpButtons;
         },
 
         alignments() {
@@ -175,9 +261,33 @@ export default {
         updateValue(value) {
             this.value = value;
         },
+        selectTemplate(template) {
+            this.editor.commands.setContent(template.text)
+        },
+        addElement(type) {
+            this.editor.commands.insertContent([
+                {
+                    type,
+                },
+                {
+                    type: "paragraph",
+                },
+            ]);
+            this.editor.view.dom.focus();
+        },
+        addVariable(variable) {
+            this.editor.commands.insertContent("{{ " + variable + " }}");
+            this.editor.view.dom.focus();
+        },
     },
 
-    mounted() {
+    async mounted() {
+        this.templates = (
+            await axios.get(
+                "/api/templates?category=" + this.field.templateCategory
+            )
+        ).data.data;
+
         this.placeholder = this.field.placeholder
             ? this.field.placeholder
             : this.field.extraAttributes
@@ -185,6 +295,7 @@ export default {
             : "";
 
         let extensions = [
+            Signature,
             Dropcursor,
             Salutation,
             Document,
