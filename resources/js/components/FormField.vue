@@ -59,16 +59,12 @@
                                     "
                                 >
                                     <DropdownTrigger class="px-3">
-                                        <h3
-                                            class="flex items-center"
-                                        >
+                                        <h3 class="flex items-center">
                                             Vorlage auswählen
                                         </h3>
                                     </DropdownTrigger>
                                     <template #menu>
-                                        <DropdownMenu
-                                            width="240"
-                                        >
+                                        <DropdownMenu width="240">
                                             <DropdownMenuItem
                                                 @click.stop="
                                                     selectTemplate(template)
@@ -129,7 +125,7 @@
                             class="cursor-pointer hover:text-primary-500"
                             @click.prevent="addVariable(variable)"
                             v-for="variable in field.variables"
-                            v-html="'{{ ' + variable + ' }}&nbsp;'"
+                            v-html="'{ ' + variable + ' }&nbsp;'"
                             :key="variable"
                         ></strong>
                     </p>
@@ -258,11 +254,19 @@ export default {
     },
 
     methods: {
+
         updateValue(value) {
             this.value = value;
         },
         selectTemplate(template) {
-            this.editor.commands.setContent(template.text)
+            let element = document.querySelector("[id^='subject']");
+            if(element) {
+                element.value = template.subject;
+                element.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+
+            this.editor.commands.setContent(template.text, true);
+
         },
         addElement(type) {
             this.editor.commands.insertContent([
@@ -276,12 +280,13 @@ export default {
             this.editor.view.dom.focus();
         },
         addVariable(variable) {
-            this.editor.commands.insertContent("{{ " + variable + " }}");
+            this.editor.commands.insertContent("{ " + variable + " }");
             this.editor.view.dom.focus();
         },
     },
 
     async mounted() {
+        console.log(this);
         this.templates = (
             await axios.get(
                 "/api/templates?category=" + this.field.templateCategory
@@ -369,6 +374,7 @@ export default {
                     let jsonContent = this.getJSON();
                     context.updateValue(JSON.stringify(jsonContent.content));
                 } else {
+                    console.log("onUpdate");
                     context.updateValue(this.getHTML());
                 }
             },

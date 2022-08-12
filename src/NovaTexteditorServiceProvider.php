@@ -36,8 +36,8 @@ class NovaTexteditorServiceProvider extends PackageServiceProvider
             Template::class,
         ]);
         Nova::serving(function () {
-            Nova::script('nova-texteditor', __DIR__ . '/../dist/js/field.js');
-            Nova::style('nova-texteditor', __DIR__ . '/../dist/css/nova.css');
+            Nova::script('nova-texteditor', __DIR__.'/../dist/js/field.js');
+            Nova::style('nova-texteditor', __DIR__.'/../dist/css/nova.css');
         });
     }
 }

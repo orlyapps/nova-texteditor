@@ -22,6 +22,7 @@ return new class extends Migration
             $table->string('category')->nullable();
             $table->foreignId('user_id')->nullable()->constrained();
             $table->string('name');
+            $table->string('subject')->nullable();
             $table->json('text')->nullable();
             $table->timestamps();
         });

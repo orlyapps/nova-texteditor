@@ -1,7 +1,9 @@
 <template>
     <PanelItem :index="index" :field="field">
         <template #value>
-            <Excerpt :content="field.value" :should-show="true" />
+           <div class="hundeschule">
+             <div class="prose" v-html="field.displayedAs"></div>
+           </div>
         </template>
     </PanelItem>
 </template>

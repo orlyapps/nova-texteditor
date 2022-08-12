@@ -3,15 +3,15 @@
 namespace Orlyapps\NovaTexteditor\Nova;
 
 use Illuminate\Http\Request;
+use Laravel\Nova\Fields\FormData;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Text;
+use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Resource;
 use Orlyapps\NovaTexteditor\Nova\Fields\TextEditor;
-use Laravel\Nova\Http\Requests\NovaRequest;
 
 class Template extends Resource
 {
-
     public static $globallySearchable = false;
 
     /**
@@ -72,11 +72,14 @@ class Template extends Resource
                 ->help(__('The template category determines the use of the template'))
                 ->sortable(),
             Text::make(__('Name'), 'name')->sortable()->rules('required'),
+            Text::make(__('Subject'), 'subject')->sortable()->dependsOn(['text'], function (TextEditor $field, NovaRequest $request, FormData $formData) {
+            }),
             TextEditor::make(__('Vorlage'), 'text')
                 ->blocks([
                     'orlyapps-salutation' => 'Anrede',
                     'orlyapps-signature' => 'Signatur',
                 ])
+                ->showHelp()
                 ->hideFromIndex(),
         ];
     }
