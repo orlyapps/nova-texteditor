@@ -3,6 +3,7 @@
 namespace Orlyapps\NovaTexteditor\Nova\Fields;
 
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Schema;
 use Laravel\Nova\Fields\Field;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
@@ -129,7 +130,10 @@ class TextEditor extends Field
             $savedModel->withoutEvents(function () use ($value, $subjectValue, $attribute, $savedModel) {
                 $fresh = $savedModel->fresh();
                 $fresh->{$attribute} = $value;
-                $fresh->subject = $subjectValue;
+                if (Schema::hasColumn($fresh->getTable(), 'subject')) {
+                    $fresh->subject = $subjectValue;
+                }
+
                 $fresh->save();
             });
         });
