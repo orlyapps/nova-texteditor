@@ -165,6 +165,7 @@ import HistoryButtons from "./buttons/HistoryButtons";
 import BaseButton from "./buttons/BaseButton.vue";
 import Salutation from "./Nodes/Salutation";
 import Signature from "./Nodes/Signature";
+import InvoicePositions from "./Nodes/InvoicePositions";
 import Dropcursor from "@tiptap/extension-dropcursor";
 
 import { FormField, HandlesValidationErrors } from "laravel-nova";
@@ -254,19 +255,17 @@ export default {
     },
 
     methods: {
-
         updateValue(value) {
             this.value = value;
         },
         selectTemplate(template) {
             let element = document.querySelector("[id^='subject']");
-            if(element) {
+            if (element) {
                 element.value = template.subject;
-                element.dispatchEvent(new Event('input', { bubbles: true }));
+                element.dispatchEvent(new Event("input", { bubbles: true }));
             }
 
             this.editor.commands.setContent(template.text, true);
-
         },
         addElement(type) {
             this.editor.commands.insertContent([
@@ -286,7 +285,6 @@ export default {
     },
 
     async mounted() {
-        console.log(this);
         this.templates = (
             await axios.get(
                 "/api/templates?category=" + this.field.templateCategory
@@ -300,6 +298,7 @@ export default {
             : "";
 
         let extensions = [
+            InvoicePositions,
             Signature,
             Dropcursor,
             Salutation,
@@ -379,6 +378,11 @@ export default {
                 }
             },
         });
+
+        if (this.field.selectFirstTemplate) {
+            console.log(this.templates[0]);
+            this.selectTemplate(this.templates[0]);
+        }
     },
 
     beforeDestroy() {

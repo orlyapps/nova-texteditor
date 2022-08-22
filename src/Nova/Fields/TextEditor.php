@@ -100,6 +100,11 @@ class TextEditor extends Field
         return $this->withMeta(['templateCategory' => $templateCategory]);
     }
 
+    public function selectFirstTemplate()
+    {
+        return $this->withMeta(['selectFirstTemplate' => true]);
+    }
+
     public function showHelp()
     {
         return $this->withMeta(['showHelp' => true]);

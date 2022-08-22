@@ -5,6 +5,7 @@ namespace Orlyapps\NovaTexteditor;
 use Laravel\Nova\Nova;
 use Orlyapps\NovaTexteditor\Nova\Template;
 use Orlyapps\NovaTexteditor\Nova\TextTemplate;
+use Orlyapps\NovaTexteditor\View\Components\InvoicePositions;
 use Orlyapps\NovaTexteditor\View\Components\Salutation;
 use Orlyapps\NovaTexteditor\View\Components\Signature;
 use Spatie\LaravelPackageTools\Package;
@@ -26,6 +27,7 @@ class NovaTexteditorServiceProvider extends PackageServiceProvider
             ->hasRoute('web')
             ->hasViewComponent('orlyapps', Salutation::class)
             ->hasViewComponent('orlyapps', Signature::class)
+            ->hasViewComponent('orlyapps', InvoicePositions::class)
             ->hasMigration('create_nova-texteditor_table');
     }
 

@@ -3,7 +3,6 @@
 namespace Orlyapps\NovaTexteditor\Nova;
 
 use Illuminate\Http\Request;
-use Laravel\Nova\Fields\FormData;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
@@ -72,12 +71,12 @@ class Template extends Resource
                 ->help(__('The template category determines the use of the template'))
                 ->sortable(),
             Text::make(__('Name'), 'name')->sortable()->rules('required'),
-            Text::make(__('Subject'), 'subject')->sortable()->dependsOn(['text'], function (TextEditor $field, NovaRequest $request, FormData $formData) {
-            }),
+            Text::make(__('Subject'), 'subject')->sortable(),
             TextEditor::make(__('Vorlage'), 'text')
                 ->blocks([
-                    'orlyapps-salutation' => 'Anrede',
+                    'orlyapps-salutation' => 'Anrede', //
                     'orlyapps-signature' => 'Signatur',
+                    'orlyapps-invoice-positions' => 'Rechnungspositonen',
                 ])
                 ->showHelp()
                 ->hideFromIndex(),
