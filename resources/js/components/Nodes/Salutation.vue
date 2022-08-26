@@ -1,7 +1,7 @@
 <template>
     <node-view-wrapper class="salutation">
         <div
-            class="drag-handle flex items-center justify-between p-2 px-6 bg-gray-100 border-primary-500 mt-3"
+            class="drag-handle flex flex-wrap items-center justify-between p-2 px-6 bg-gray-100 border-primary-500 mt-3"
             contenteditable="false"
             draggable="true"
             data-drag-handle

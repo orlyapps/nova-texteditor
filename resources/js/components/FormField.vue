@@ -11,7 +11,7 @@
                     class="w-full overflow-break z-10 bg-gray-100 rounded"
                     style="position: sticky; top: 0; left: 0"
                 >
-                    <div class="p-1 flex items-center">
+                    <div class="p-1 flex flex-wrap items-center">
                         <div
                             v-for="button in buttons"
                             :key="'button-' + button"
@@ -114,15 +114,11 @@
                     v-if="field.showHelp"
                     class="bg-primary-100 px-6 py-4 text-sm"
                 >
-                    <p class="mb-2">
-                        Änderungen können per Tastenkürze
-                        <i>Strg+Z</i>&nbsp;<strong>Rückgängig</strong> gemacht
-                        werden.
-                    </p>
+
                     <p v-if="field.variables">
                         Folgende Platzhalter stehen zur Verfügung:
                         <strong
-                            class="cursor-pointer hover:text-primary-500"
+                            class="cursor-pointer hover:text-primary-500 bg-white px-2 py-1 rounded-lg"
                             @click.prevent="addVariable(variable)"
                             v-for="variable in field.variables"
                             v-html="'{ ' + variable + ' }&nbsp;'"
@@ -227,21 +223,15 @@ export default {
         },
 
         alignments() {
-            return this.field.alignments
-                ? this.field.alignments
-                : ["start", "center", "end", "justify"];
+            return ["left", "center", "end", "justify"];
         },
 
         alignElements() {
-            return this.field.alignElements
-                ? this.field.alignElements
-                : ["heading", "paragraph"];
+            return ["heading", "paragraph"];
         },
 
         defaultAlignment() {
-            return this.field.defaultAlignment
-                ? this.field.defaultAlignment
-                : "left";
+            return "left";
         },
 
         cssProps() {
@@ -349,9 +339,7 @@ export default {
                 },
             }),
             TextAlign.configure({
-                types: this.alignElements,
-                alignments: this.alignments,
-                defaultAlignment: this.defaultAlignment,
+                types: ["heading", "paragraph"],
             }),
             History,
             Text,
@@ -373,7 +361,6 @@ export default {
                     let jsonContent = this.getJSON();
                     context.updateValue(JSON.stringify(jsonContent.content));
                 } else {
-                    console.log("onUpdate");
                     context.updateValue(this.getHTML());
                 }
             },

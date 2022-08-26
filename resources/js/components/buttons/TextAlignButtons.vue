@@ -2,24 +2,29 @@
     <span class="whitespace-nowrap">
         <base-button
             v-for="alignment in alignments"
-            :key="'alignment-button'+alignment"
+            :key="'alignment-button' + alignment"
             :isActive="alignmentIsActive(alignment)"
             :isDisabled="mode != 'editor'"
             :clickMethod="setAlignment"
             :clickMethodParameters="alignment"
-            :title="__('align '+alignment)"
-            :icon="['fas', 'align-'+iconName(alignment)]"
+            :title="__('align ' + alignment)"
+            :icon="['fas', 'align-' + iconName(alignment)]"
         >
         </base-button>
     </span>
 </template>
 
 <script>
-
-import BaseButton from './BaseButton.vue';
+import BaseButton from "./BaseButton.vue";
 
 export default {
-    props: ['alignments', 'alignElements', 'defaultAlignment', 'editor', 'mode'],
+    props: [
+        "alignments",
+        "alignElements",
+        "defaultAlignment",
+        "editor",
+        "mode",
+    ],
 
     components: {
         BaseButton,
@@ -27,34 +32,44 @@ export default {
 
     methods: {
         iconName(alignment) {
-            if (alignment == 'start') { return 'left' };
-            if (alignment == 'end') { return 'right' };
+            if (alignment == "start") {
+                return "left";
+            }
+            if (alignment == "end") {
+                return "right";
+            }
             return alignment;
-        }, 
+        },
         alignmentIsActive(alignment) {
-            let isActive = this.editor ? this.editor.isActive({ textAlign: alignment }) : false;
-            if (alignment == 'left') {
-                isActive = this.editor 
-                    ? (this.editor.isActive({ textAlign: 'left' }) || this.editor.isActive({ textAlign: 'start' })) 
-                    : false
+
+            let isActive = this.editor
+                ? this.editor.isActive({ textAlign: alignment })
+                : false;
+            if (alignment == "left") {
+                isActive = this.editor
+                    ? this.editor.isActive({ textAlign: "left" }) ||
+                      this.editor.isActive({ textAlign: "start" })
+                    : false;
             }
-            if (alignment == 'right') {
-                isActive = this.editor 
-                    ? (this.editor.isActive({ textAlign: 'right' }) || this.editor.isActive({ textAlign: 'end' })) 
-                    : false
+            if (alignment == "right") {
+                isActive = this.editor
+                    ? this.editor.isActive({ textAlign: "right" }) ||
+                      this.editor.isActive({ textAlign: "end" })
+                    : false;
             }
-           return isActive;
+            return isActive;
         },
         setAlignment(alignment) {
-            if (alignment == 'left') {
-                alignment = 'start';
+            if (alignment == "start") {
+                alignment = "left";
             }
-            if (alignment == 'right') {
-                alignment = 'end';
+            if (alignment == "end") {
+                alignment = "right";
             }
-            this.editor.chain().focus().setTextAlign(alignment).run();
-        }
-    }
-}
 
+            this.editor.commands.setTextAlign(alignment);
+
+        },
+    },
+};
 </script>
