@@ -62,15 +62,14 @@ class TextEditor extends Field
         ];
     }
 
-    public function resolveVariables($callback)
-    {
-        $this->variableResolver = $callback;
-
-        return $this;
-    }
-
     public function variables($variables)
     {
+        if (is_callable($variables)) {
+            $this->variableResolver = $variables;
+
+            return $this->withMeta(['variables' => call_user_func($variables)]);
+        }
+
         return $this->withMeta(['variables' => $variables]);
     }
 
@@ -129,19 +128,14 @@ class TextEditor extends Field
         /**
          * Variabeln erst nach dem Speichern evaluieren und ersetzen
          */
-        \Event::listen('eloquent.saved: '.get_class($model), function ($savedModel) use ($attribute, $request, $requestAttribute) {
-            $value = $this->evaluateVariables($request[$requestAttribute], $savedModel);
-            $subjectValue = $this->evaluateVariables($request['subject'], $savedModel);
-            $savedModel->withoutEvents(function () use ($value, $subjectValue, $attribute, $savedModel) {
-                $fresh = $savedModel->fresh();
-                $fresh->{$attribute} = $value;
-                if (Schema::hasColumn($fresh->getTable(), 'subject')) {
-                    $fresh->subject = $subjectValue;
-                }
+        $value = $this->evaluateVariables($request[$requestAttribute], $model);
+        $subjectValue = $this->evaluateVariables($request['subject'], $model);
 
-                $fresh->save();
-            });
-        });
+        $model->{$attribute} = $value;
+
+        if (Schema::hasColumn($model->getTable(), 'subject')) {
+            $model->subject = $subjectValue;
+        }
     }
 
     protected function evaluateVariables($attributeValue, $model)
@@ -151,6 +145,7 @@ class TextEditor extends Field
         }
 
         $variables = array_merge($this->defaultVariables(), call_user_func($this->variableResolver, $model));
+
         foreach ($variables as $variable => $value) {
             $attributeValue = str_replace('{'.$variable.'}', $value, $attributeValue);
             $attributeValue = str_replace('{ '.$variable.' }', $value, $attributeValue);

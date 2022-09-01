@@ -114,15 +114,14 @@
                     v-if="field.showHelp"
                     class="bg-primary-100 px-6 py-4 text-sm"
                 >
-
                     <p v-if="field.variables">
                         Folgende Platzhalter stehen zur Verfügung:
                         <strong
                             class="cursor-pointer hover:text-primary-500 bg-white px-2 py-1 rounded-lg"
-                            @click.prevent="addVariable(variable)"
-                            v-for="variable in field.variables"
-                            v-html="'{ ' + variable + ' }&nbsp;'"
-                            :key="variable"
+                            @click.prevent="addVariable(name)"
+                            v-for="(value, name) in field.variables"
+                            v-html="'{ ' + name + ' }&nbsp;'"
+                            :key="name"
                         ></strong>
                     </p>
                 </div>
@@ -269,8 +268,10 @@ export default {
             this.editor.view.dom.focus();
         },
         addVariable(variable) {
-            this.editor.commands.insertContent("{ " + variable + " }");
-            this.editor.view.dom.focus();
+            this.editor
+                .chain()
+                .insertContent("{ " + variable + " }")
+                .run();
         },
     },
 
