@@ -65,15 +65,33 @@
                                     </DropdownTrigger>
                                     <template #menu>
                                         <DropdownMenu width="240">
-                                            <DropdownMenuItem
-                                                @click.stop="
-                                                    selectTemplate(template)
-                                                "
-                                                v-for="template in templates"
-                                                :key="template.id"
+                                            <ScrollWrap
+                                                :height="350"
+                                                class="divide-y divide-gray-100 dark:divide-gray-800 divide-solid"
                                             >
-                                                {{ template.name }}
-                                            </DropdownMenuItem>
+                                                <div>
+                                                    <DropdownMenuItem
+                                                        @click.stop="
+                                                            saveTemplate()
+                                                        "
+                                                    >
+                                                        Als Vorlage speichern
+                                                    </DropdownMenuItem>
+                                                </div>
+                                                <div class="py-1">
+                                                    <DropdownMenuItem
+                                                        @click.stop="
+                                                            selectTemplate(
+                                                                template
+                                                            )
+                                                        "
+                                                        v-for="template in templates"
+                                                        :key="template.id"
+                                                    >
+                                                        {{ template.name }}
+                                                    </DropdownMenuItem>
+                                                </div>
+                                            </ScrollWrap>
                                         </DropdownMenu>
                                     </template>
                                 </Dropdown>
@@ -256,6 +274,23 @@ export default {
 
             this.editor.commands.setContent(template.text, true);
         },
+        async saveTemplate() {
+            let name = window.prompt("Name der Vorlage");
+            await axios.post("/api/templates", {
+                category: this.field.templateCategory,
+                text: this.editor.getHTML(),
+                subject:  document.querySelector("[id^='subject']").value,
+                name
+            });
+            this.fetchTemplates();
+        },
+        async fetchTemplates() {
+            this.templates = (
+                await axios.get(
+                    "/api/templates?category=" + this.field.templateCategory
+                )
+            ).data.data;
+        },
         addElement(type) {
             this.editor.commands.insertContent([
                 {
@@ -276,12 +311,7 @@ export default {
     },
 
     async mounted() {
-        this.templates = (
-            await axios.get(
-                "/api/templates?category=" + this.field.templateCategory
-            )
-        ).data.data;
-
+        await this.fetchTemplates();
         this.placeholder = this.field.placeholder
             ? this.field.placeholder
             : this.field.extraAttributes

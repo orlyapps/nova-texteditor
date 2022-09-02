@@ -24,4 +24,11 @@ class TemplateController
 
         return TemplateResource::collection($templates);
     }
+
+    public function store(Request $request)
+    {
+        $template = Template::create($request->all());
+
+        return TemplateResource::make($template);
+    }
 }
