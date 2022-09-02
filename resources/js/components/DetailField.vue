@@ -2,7 +2,7 @@
     <PanelItem :index="index" :field="field">
         <template #value>
            <div class="hundeschule">
-             <div class="prose" v-html="field.displayedAs"></div>
+             <div class="prose max-w-none" v-html="field.displayedAs"></div>
            </div>
         </template>
     </PanelItem>
