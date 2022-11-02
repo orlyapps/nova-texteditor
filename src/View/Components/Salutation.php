@@ -14,7 +14,7 @@ class Salutation extends Component
     {
         if (! isset($this->contact)) {
             return <<<'blade'
-           <p><strong>Sehr geehrte Damen und Herren</strong></p>
+           <p><strong>Sehr geehrte Damen und Herren,</strong></p>
         blade;
         }
         if ($this->type === 'lastname') {
@@ -31,16 +31,16 @@ class Salutation extends Component
         blade;
         } elseif ($this->type === 'general') {
             return <<<'blade'
-            <p><strong>Sehr geehrte Damen und Herren</strong></p>
+            <p><strong>Sehr geehrte Damen und Herren,</strong></p>
         blade;
         } elseif ($this->type === 'du') {
             return <<<'blade'
-            <p><strong>{{ $contact->salutationInformal }}</strong></p>
+            <p><strong>{{ $contact->salutationInformal }},</strong></p>
         blade;
         }
 
         return <<<'blade'
-           <p><strong>Sehr geehrte Damen und Herren</strong></p>
+           <p><strong>Sehr geehrte Damen und Herren,</strong></p>
         blade;
     }
 }
