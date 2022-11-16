@@ -2,7 +2,6 @@
 
 namespace Orlyapps\NovaTexteditor\Nova\Fields;
 
-use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Schema;
 use Laravel\Nova\Fields\Field;
 use Laravel\Nova\Http\Requests\NovaRequest;
@@ -32,7 +31,6 @@ class TextEditor extends Field
         } else {
             $this->attribute = $attribute ?? str_replace(' ', '_', Str::lower($name));
         }
-        $this->displayUsing(fn () => Blade::render($this->value, ['contact' => null, 'user' => auth()->user()]));
     }
 
     /**

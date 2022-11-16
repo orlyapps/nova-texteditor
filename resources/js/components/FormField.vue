@@ -176,9 +176,6 @@ import HeadingButtons from "./buttons/HeadingButtons";
 import TextAlignButtons from "./buttons/TextAlignButtons";
 import HistoryButtons from "./buttons/HistoryButtons";
 import BaseButton from "./buttons/BaseButton.vue";
-import Salutation from "./Nodes/Salutation";
-import Signature from "./Nodes/Signature";
-import InvoicePositions from "./Nodes/InvoicePositions";
 import Dropcursor from "@tiptap/extension-dropcursor";
 
 import { FormField, HandlesValidationErrors } from "laravel-nova";
@@ -276,20 +273,23 @@ export default {
         },
         async saveTemplate() {
             let name = window.prompt("Name der Vorlage");
-            await axios.post("/api/templates", {
+
+            await Nova.request().post("/api/templates", {
                 category: this.field.templateCategory,
                 text: this.editor.getHTML(),
                 subject:  document.querySelector("[id^='subject']").value,
                 name
             });
+
             this.fetchTemplates();
         },
         async fetchTemplates() {
             this.templates = (
-                await axios.get(
+                await Nova.request().get(
                     "/api/templates?category=" + this.field.templateCategory
                 )
             ).data.data;
+
         },
         addElement(type) {
             this.editor.commands.insertContent([
@@ -319,10 +319,7 @@ export default {
             : "";
 
         let extensions = [
-            InvoicePositions,
-            Signature,
             Dropcursor,
-            Salutation,
             Document,
             Bold,
             Italic,
@@ -332,7 +329,6 @@ export default {
             Underline,
             Subscript,
             Superscript,
-
             Blockquote.extend({
                 addAttributes() {
                     return {
@@ -374,6 +370,8 @@ export default {
             }),
             History,
             Text,
+            ...window.TextEditorNotes
+
         ];
 
         const context = this;
@@ -382,6 +380,7 @@ export default {
             extensions: extensions,
             content: this.contentWithTrailingParagraph,
             onCreate() {
+                console.log(this);
                 try {
                     let content = JSON.parse(context.value);
                     this.commands.setContent(content);

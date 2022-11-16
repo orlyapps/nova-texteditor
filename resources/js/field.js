@@ -1,4 +1,3 @@
-window.axios = require('axios');
 
 import DetailField from './components/DetailField'
 import FormField from './components/FormField'
