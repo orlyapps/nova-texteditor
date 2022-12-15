@@ -277,8 +277,8 @@ export default {
             await Nova.request().post("/api/templates", {
                 category: this.field.templateCategory,
                 text: this.editor.getHTML(),
-                subject:  document.querySelector("[id^='subject']").value,
-                name
+                subject: document.querySelector("[id^='subject']").value,
+                name,
             });
 
             this.fetchTemplates();
@@ -289,7 +289,6 @@ export default {
                     "/api/templates?category=" + this.field.templateCategory
                 )
             ).data.data;
-
         },
         addElement(type) {
             this.editor.commands.insertContent([
@@ -346,7 +345,9 @@ export default {
                 },
             }),
             HorizontalRule,
-            ListItem,
+            ListItem.extend({
+                content: "text*",
+            }),
             OrderedList.extend({
                 addAttributes() {
                     return {
@@ -370,8 +371,7 @@ export default {
             }),
             History,
             Text,
-            ...window.TextEditorNotes
-
+            ...window.TextEditorNotes,
         ];
 
         const context = this;
