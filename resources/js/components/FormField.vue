@@ -345,9 +345,7 @@ export default {
                 },
             }),
             HorizontalRule,
-            ListItem.extend({
-                content: "text*",
-            }),
+            ListItem,
             OrderedList.extend({
                 addAttributes() {
                     return {
