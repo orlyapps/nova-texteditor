@@ -226,6 +226,8 @@ export default {
                       "|",
                       "bulletList",
                       "orderedList",
+                      "sinkListItem",
+                      "liftListItem",
                       "|",
                       "blockquote",
                       "hardBreak",

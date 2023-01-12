@@ -1,25 +1,17 @@
 <template>
-  <button
+    <button
         type="button"
-        class="
-            group relative
-            p-2
-            leading-none text-xs
-            rounded shadow
-            tiptap-button
-        "
+        class="group relative p-2 leading-none text-xs rounded shadow tiptap-button"
         style="margin: 4px; min-width: 32px; height: 32px"
         :class="{
             'bg-primary-500 hover:bg-primary-400 text-white': isActive,
             'bg-white hover:bg-gray-200 text-black': !isActive,
             'opacity-50 pointer-events-none': isDisabled,
         }"
-
         @click="callClickMethod"
     >
         <template v-if="icon">
-            <font-awesome-icon :icon="icon">
-            </font-awesome-icon>
+            <font-awesome-icon :icon="icon"> </font-awesome-icon>
         </template>
 
         <template v-else>
@@ -29,8 +21,7 @@
 </template>
 
 <script>
-
-import { library } from '@fortawesome/fontawesome-svg-core';
+import { library } from "@fortawesome/fontawesome-svg-core";
 
 import {
     faAlignCenter,
@@ -57,8 +48,10 @@ import {
     faTable,
     faUnderline,
     faUndoAlt,
-    faUnlink
-} from '@fortawesome/free-solid-svg-icons';
+    faUnlink,
+    faIndent,
+    faOutdent,
+} from "@fortawesome/free-solid-svg-icons";
 
 library.add(
     faAlignCenter,
@@ -88,25 +81,27 @@ library.add(
     faAlignRight,
     faAlignJustify,
     faRotateLeft,
-    faRotateRight
+    faRotateRight,
+    faIndent,
+    faOutdent
 );
 
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 export default {
     data() {
         return {
             hovered: false,
-        }
+        };
     },
     props: [
-        'clickMethod',
-        'clickMethodParameters',
-        'title',
-        'isActive',
-        'isDisabled',
-        'icon',
-        'innerHtml',
+        "clickMethod",
+        "clickMethodParameters",
+        "title",
+        "isActive",
+        "isDisabled",
+        "icon",
+        "innerHtml",
     ],
 
     components: {
@@ -115,10 +110,9 @@ export default {
 
     methods: {
         callClickMethod() {
-            let tmpParams = this.clickMethodParameters
+            let tmpParams = this.clickMethodParameters;
             if (tmpParams) {
-
-                if (!typeof(tmpParams) != 'object') {
+                if (!typeof tmpParams != "object") {
                     tmpParams = [tmpParams];
                 }
 
@@ -126,7 +120,7 @@ export default {
             } else {
                 this.clickMethod();
             }
-        }
-    }
-}
+        },
+    },
+};
 </script>
