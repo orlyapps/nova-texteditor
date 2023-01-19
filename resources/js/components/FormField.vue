@@ -116,7 +116,8 @@
                     </h3>
                     <p class="mb-2">
                         Diese Blöcke können im Text platziert werden und werden
-                        beim automatisch durch den Inhalt ersetzt.
+                        automatisch durch den Inhalt ersetzt. Die Blöcke können
+                        mit der Backspace-Taste (Rücktaste) gelöscht werden.
                     </p>
                     <button
                         v-for="(name, key) in field.blocks"
