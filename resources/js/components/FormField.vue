@@ -381,7 +381,6 @@ export default {
             extensions: extensions,
             content: this.contentWithTrailingParagraph,
             onCreate() {
-                console.log(this);
                 try {
                     let content = JSON.parse(context.value);
                     this.commands.setContent(content);
@@ -398,8 +397,9 @@ export default {
         });
 
         if (this.field.selectFirstTemplate) {
-            console.log(this.templates[0]);
-            this.selectTemplate(this.templates[0]);
+            if (!this.value.length) {
+                this.selectTemplate(this.templates[0]);
+            }
         }
     },
 
