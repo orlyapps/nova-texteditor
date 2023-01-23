@@ -15,8 +15,9 @@ class TemplateController
      */
     public function index(Request $request)
     {
+        $categories = str($request->category)->explode(',');
         $templates = Template::query()
-            ->where('category', $request->category)
+            ->whereIn('category', $categories)
             ->where(function ($query) use ($request) {
                 $query->whereNull('user_id')->orWhere('user_id', $request->user()->id);
             })
