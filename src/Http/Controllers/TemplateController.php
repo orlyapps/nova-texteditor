@@ -16,14 +16,18 @@ class TemplateController
     public function index(Request $request)
     {
         $categories = str($request->category)->explode(',');
-        $templates = Template::query()
-            ->whereIn('category', $categories)
-            ->where(function ($query) use ($request) {
-                $query->whereNull('user_id')->orWhere('user_id', $request->user()->id);
-            })
-            ->get();
+        try {
+            $templates = Template::query()
+                  ->whereIn('category', $categories)
+                  ->where(function ($query) use ($request) {
+                      $query->whereNull('user_id')->orWhere('user_id', $request->user()->id);
+                  })
+                  ->get();
 
-        return TemplateResource::collection($templates);
+            return TemplateResource::collection($templates);
+        } catch (\Throwable $th) {
+            return TemplateResource::collection(collect());
+        }
     }
 
     public function store(Request $request)
