@@ -170,6 +170,7 @@ import Underline from "@tiptap/extension-underline";
 import TextAlign from "@tiptap/extension-text-align";
 import History from "@tiptap/extension-history";
 import Document from "@tiptap/extension-document";
+import Link from "@tiptap/extension-link";
 import Paragraph from "@tiptap/extension-paragraph";
 import HardBreak from "@tiptap/extension-hard-break";
 import NormalButton from "./buttons/NormalButton";
@@ -331,6 +332,7 @@ export default {
             Underline,
             Subscript,
             Superscript,
+            Link.configure(),
             Blockquote.extend({
                 addAttributes() {
                     return {
