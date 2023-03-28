@@ -268,7 +268,7 @@ export default {
         },
         selectTemplate(template) {
             let element = document.querySelector("[id^='subject']");
-            if (element) {
+            if (element && element.value === "") {
                 element.value = template.subject;
                 element.dispatchEvent(new Event("input", { bubbles: true }));
             }
