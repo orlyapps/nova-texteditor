@@ -34,6 +34,14 @@
                                 >
                                 </text-align-buttons>
                             </template>
+                            <template v-else-if="button == 'heading'">
+                                <heading-buttons
+                                    :headingLevels="headingLevels"
+                                    :mode="mode"
+                                    :editor="editor"
+                                >
+                                </heading-buttons>
+                            </template>
 
                             <template v-else-if="button == 'history'">
                                 <history-buttons :editor="editor" :mode="mode">
@@ -105,7 +113,11 @@
                     :style="cssProps"
                     v-show="mode == 'editor'"
                 >
-                    <editor-content :editor="editor" />
+                    <editor-content
+                        :editor="editor"
+                        class="prose"
+                        style="max-width: none"
+                    />
                 </div>
                 <div
                     class="bg-primary-100 px-6 py-3 text-sm mt-3 rounded-lg"
@@ -170,6 +182,7 @@ import Underline from "@tiptap/extension-underline";
 import TextAlign from "@tiptap/extension-text-align";
 import History from "@tiptap/extension-history";
 import Document from "@tiptap/extension-document";
+import Heading from "@tiptap/extension-heading";
 import Link from "@tiptap/extension-link";
 import Paragraph from "@tiptap/extension-paragraph";
 import HardBreak from "@tiptap/extension-hard-break";
@@ -215,6 +228,9 @@ export default {
 
             return this.value;
         },
+        headingLevels() {
+            return [2, 3, 4];
+        },
         buttons() {
             let tmpButtons = this.field.buttons
                 ? this.field.buttons
@@ -225,6 +241,8 @@ export default {
                       "|",
                       "underline",
                       "highlight",
+                      "|",
+                      "heading",
                       "|",
                       "bulletList",
                       "orderedList",
@@ -332,6 +350,9 @@ export default {
             Underline,
             Subscript,
             Superscript,
+            Heading.configure({
+                levels: [2, 3, 4],
+            }),
             Link.configure(),
             Blockquote.extend({
                 addAttributes() {
@@ -433,50 +454,6 @@ export default {
             height: 0;
         }
 
-        p,
-        h1,
-        h2,
-        h3,
-        h4,
-        h5,
-        h6,
-        blockquote,
-        ul,
-        ol,
-        table,
-        pre {
-            margin-top: 1em;
-            line-height: 1.5em;
-        }
-
-        h1 {
-            font-size: 3em;
-        }
-        h2 {
-            font-size: 2.4em;
-        }
-        h3 {
-            font-size: 1.8em;
-        }
-        h4 {
-            font-size: 1.5em;
-        }
-        h5 {
-            font-size: 1.3em;
-        }
-        h6 {
-            font-size: 1.1em;
-        }
-
-        h1,
-        h2,
-        h3,
-        h4,
-        h5,
-        h6 {
-            text-align: var(--text-align);
-        }
-
         a {
             color: #0ea5e9;
             text-decoration: underline;
@@ -492,47 +469,8 @@ export default {
             border-radius: 0.125rem;
         }
 
-        p:first-child,
-        h1:first-child,
-        h2:first-child,
-        h3:first-child,
-        h4:first-child,
-        h5:first-child,
-        h6:first-child,
-        blockquote:first-child,
-        ul:first-child,
-        ol:first-child,
-        table:first-child,
-        pre:first-child {
-            margin-top: 0;
-        }
-
-        blockquote {
-            display: block;
-            margin-top: 1.5em;
-            margin-bottom: 1.5em;
-            padding-left: 15px;
-            border-left: 3px solid #dddddd;
-        }
-
         a {
             pointer-events: none;
-        }
-
-        ul {
-            padding-left: 16px;
-
-            li {
-                list-style: disc;
-            }
-        }
-
-        ol {
-            padding-left: 16px;
-
-            li {
-                list-style: numeric;
-            }
         }
 
         hr {
