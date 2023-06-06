@@ -90,7 +90,8 @@
                                                     <DropdownMenuItem
                                                         @click.stop="
                                                             selectTemplate(
-                                                                template
+                                                                template,
+                                                                true
                                                             )
                                                         "
                                                         v-for="template in templates"
@@ -284,9 +285,10 @@ export default {
         updateValue(value) {
             this.value = value;
         },
-        selectTemplate(template) {
+        selectTemplate(template, overwrite = false) {
             let element = document.querySelector("[id^='subject']");
-            if (element && element.value === "") {
+
+            if (element && overwrite) {
                 element.value = template.subject;
                 element.dispatchEvent(new Event("input", { bubbles: true }));
             }
@@ -421,7 +423,10 @@ export default {
 
         if (this.field.selectFirstTemplate) {
             if (!this.value.length) {
-                this.selectTemplate(this.templates[0]);
+                this.selectTemplate(
+                    this.templates[0],
+                    document.querySelector("[id^='subject']").value.length == 0
+                );
             }
         }
     },
