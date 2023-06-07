@@ -421,13 +421,12 @@ export default {
             },
         });
 
-        if (this.field.selectFirstTemplate) {
-            if (!this.value.length) {
-                this.selectTemplate(
-                    this.templates[0],
-                    document.querySelector("[id^='subject']").value.length == 0
-                );
-            }
+        if (this.field.selectFirstTemplate && !this.value.length) {
+            const isSubjectEmpty =
+                !document.querySelector("[id^='subject']") ||
+                document.querySelector("[id^='subject']").value.length === 0;
+
+            this.selectTemplate(this.templates[0], isSubjectEmpty);
         }
     },
 
