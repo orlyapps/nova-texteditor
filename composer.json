@@ -24,8 +24,6 @@
     "require-dev": {
         "laravel/nova": "~4.0",
         "nunomaduro/collision": "^6.0",
-        "pestphp/pest": "^1.0",
-        "pestphp/pest-plugin-laravel": "^1.0",
         "vimeo/psalm": "^4.8"
     },
     "autoload": {
