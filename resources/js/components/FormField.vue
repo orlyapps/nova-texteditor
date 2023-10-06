@@ -293,14 +293,7 @@ export default {
                 element.dispatchEvent(new Event("input", { bubbles: true }));
             }
 
-            if (this.field.saveAsJson) {
-                this.editor.commands.setContent(
-                    JSON.parse(template.text),
-                    true
-                );
-            } else {
-                this.editor.commands.setContent(template.text, true);
-            }
+            this.editor.commands.setContent(template.text, true);
         },
         async saveTemplate() {
             let name = window.prompt("Name der Vorlage");
@@ -404,20 +397,19 @@ export default {
             }),
             History,
             Text,
-            ...(window.TextEditorNotes ?? []),
+            ...window.TextEditorNotes,
         ];
 
         const context = this;
 
         this.editor = new Editor({
             extensions: extensions,
-
+            content: this.contentWithTrailingParagraph,
             onCreate() {
-                if (!context.value) {
-                    this.commands.setContent(context.field.defaultValue);
-                    return;
-                }
-                this.commands.setContent(context.value);
+                try {
+                    let content = JSON.parse(context.value);
+                    this.commands.setContent(content);
+                } catch {}
             },
             onUpdate() {
                 if (context.saveAsJson) {

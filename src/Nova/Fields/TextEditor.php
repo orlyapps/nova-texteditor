@@ -9,7 +9,7 @@ use Laravel\Nova\Http\Requests\NovaRequest;
 class TextEditor extends Field
 {
     protected $variableResolver = null;
-    protected $saveAsJson = false;
+
     /**
      * Create a new field.
      *
@@ -31,14 +31,6 @@ class TextEditor extends Field
         } else {
             $this->attribute = $attribute ?? str_replace(' ', '_', Str::lower($name));
         }
-    }
-
-    public function saveAsJson()
-    {
-        $this->saveAsJson = true;
-        return $this->withMeta([
-            'saveAsJson' => true,
-        ]);
     }
 
     /**
@@ -137,9 +129,6 @@ class TextEditor extends Field
         $value = $this->evaluateVariables($request[$requestAttribute], $model);
         $subjectValue = $this->evaluateVariables($request['subject'], $model);
 
-        if ($this->saveAsJson) {
-            $value = json_decode($value);
-        }
         $model->{$attribute} = $value;
 
         if (Schema::hasColumn($model->getTable(), 'subject')) {

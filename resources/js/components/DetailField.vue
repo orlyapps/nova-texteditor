@@ -1,9 +1,9 @@
 <template>
     <PanelItem :index="index" :field="field">
         <template #value>
-            <div class="hundeschule">
-                <div class="prose max-w-none" v-html="field.displayedAs"></div>
-            </div>
+           <div class="hundeschule">
+             <div class="prose max-w-none" v-html="field.displayedAs"></div>
+           </div>
         </template>
     </PanelItem>
 </template>
@@ -13,9 +13,3 @@ export default {
     props: ["index", "resource", "resourceName", "resourceId", "field"],
 };
 </script>
-<style>
-p {
-    white-space: normal !important;
-    word-break: normal !important;
-}
-</style>
