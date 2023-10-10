@@ -60,6 +60,8 @@ export default {
                 return ["fa", "indent"];
             } else if (this.button == "liftListItem") {
                 return ["fa", "outdent"];
+            } else if (this.button == "textStyle") {
+                return ["fas", "font"];
             }
 
             return null;
@@ -117,6 +119,12 @@ export default {
                 command.sinkListItem("listItem");
             } else if (this.button == "sinkListItem") {
                 command.liftListItem("listItem");
+            } else if (this.button == "textStyle") {
+                if (this.editor.isActive("textStyle")) {
+                    command.unsetFontSize();
+                } else {
+                    command.setFontSize("10px");
+                }
             }
 
             command.run();

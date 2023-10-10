@@ -192,6 +192,7 @@ import HeadingButtons from "./buttons/HeadingButtons";
 import TextAlignButtons from "./buttons/TextAlignButtons";
 import HistoryButtons from "./buttons/HistoryButtons";
 import BaseButton from "./buttons/BaseButton.vue";
+import FontSize from "../font-size";
 import Dropcursor from "@tiptap/extension-dropcursor";
 
 import { FormField, HandlesValidationErrors } from "laravel-nova";
@@ -243,6 +244,7 @@ export default {
                       "underline",
                       "highlight",
                       "|",
+                      "textStyle",
                       "heading",
                       "|",
                       "bulletList",
@@ -349,6 +351,7 @@ export default {
             Highlight,
             Strike,
             TextStyle,
+            FontSize,
             Underline,
             Subscript,
             Superscript,

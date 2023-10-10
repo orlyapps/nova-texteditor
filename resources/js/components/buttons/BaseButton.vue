@@ -51,6 +51,7 @@ import {
     faUnlink,
     faIndent,
     faOutdent,
+    faFont
 } from "@fortawesome/free-solid-svg-icons";
 
 library.add(
@@ -83,7 +84,8 @@ library.add(
     faRotateLeft,
     faRotateRight,
     faIndent,
-    faOutdent
+    faOutdent,
+    faFont
 );
 
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
