@@ -18,11 +18,11 @@ class TemplateController
         $categories = str($request->category)->explode(',');
         try {
             $templates = Template::query()
-                  ->whereIn('category', $categories)
-                  ->where(function ($query) use ($request) {
-                      $query->whereNull('user_id')->orWhere('user_id', $request->user()->id);
-                  })
-                  ->get();
+                ->whereIn('category', $categories)
+                ->where(function ($query) use ($request) {
+                    $query->whereNull('user_id')->orWhere('user_id', $request->user()->id);
+                })
+                ->get();
 
             return TemplateResource::collection($templates);
         } catch (\Throwable $th) {
@@ -32,7 +32,16 @@ class TemplateController
 
     public function store(Request $request)
     {
-        $template = Template::create($request->all());
+        if (blank($request->name)) {
+            return;
+        }
+        $category = str($request->category)->explode(',')->first();
+        $template = Template::create([
+            'name' => $request->name,
+            'category' => $category,
+            'subject' => $request->subject,
+            'text' => $request->text,
+        ]);
 
         return TemplateResource::make($template);
     }
