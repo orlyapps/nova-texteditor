@@ -287,6 +287,21 @@ export default {
         updateValue(value) {
             this.value = value;
         },
+
+        fieldDefaultValue() {
+            return this.field.defaultValue ?? "";
+        },
+
+        fill(formData) {
+            if (this.saveAsJson) {
+                formData.append(
+                    this.fieldAttribute,
+                    JSON.stringify(this.value)
+                );
+            } else {
+                formData.append(this.fieldAttribute, String(this.value));
+            }
+        },
         selectTemplate(template, overwrite = false) {
             let element = document.querySelector("[id^='subject']");
 
@@ -417,7 +432,7 @@ export default {
             onUpdate() {
                 if (context.saveAsJson) {
                     let jsonContent = this.getJSON();
-                    context.updateValue(JSON.stringify(jsonContent.content));
+                    context.updateValue(jsonContent);
                 } else {
                     context.updateValue(this.getHTML());
                 }
@@ -443,6 +458,12 @@ export default {
 .nova-tiptap-editor {
     padding-bottom: 20px;
     padding-top: 20px;
+
+    .prose {
+        & li > p {
+            margin: 0 !important;
+        }
+    }
 
     .ProseMirror-focused {
         outline: none;

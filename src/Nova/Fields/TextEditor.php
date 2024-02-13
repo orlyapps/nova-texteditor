@@ -56,7 +56,7 @@ class TextEditor extends Field
     public function defaultVariables()
     {
         return [
-            'heute' => '"'.now()->format('d.m.Y').'"',
+            'heute' => '"' . now()->format('d.m.Y') . '"',
         ];
     }
 
@@ -86,6 +86,12 @@ class TextEditor extends Field
     {
         return $this->withMeta(['prefix' => $prefix]);
     }
+
+    public function saveAsJson()
+    {
+        return $this->withMeta(['saveAsJson' => true]);
+    }
+
 
     public function blocks(array $blocks)
     {
@@ -128,7 +134,9 @@ class TextEditor extends Field
          */
         $value = $this->evaluateVariables($request[$requestAttribute], $model);
         $subjectValue = $this->evaluateVariables($request['subject'], $model);
-
+        if(data_get($this->meta, 'saveAsJson')) {
+            $value = json_decode($value);
+        }
         $model->{$attribute} = $value;
 
         if (Schema::hasColumn($model->getTable(), 'subject')) {
@@ -145,8 +153,8 @@ class TextEditor extends Field
         $variables = array_merge($this->defaultVariables(), call_user_func($this->variableResolver, $model));
 
         foreach ($variables as $variable => $value) {
-            $attributeValue = str_replace('{'.$variable.'}', $value, $attributeValue);
-            $attributeValue = str_replace('{ '.$variable.' }', $value, $attributeValue);
+            $attributeValue = str_replace('{' . $variable . '}', $value, $attributeValue);
+            $attributeValue = str_replace('{ ' . $variable . ' }', $value, $attributeValue);
         }
 
         return $attributeValue;
