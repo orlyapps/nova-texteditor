@@ -4,7 +4,6 @@ namespace Orlyapps\NovaTexteditor\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Orlyapps\NovaTexteditor\Http\Resources\TemplateResource;
-use Orlyapps\NovaTexteditor\Models\Template;
 
 class TemplateController
 {
@@ -16,8 +15,10 @@ class TemplateController
     public function index(Request $request)
     {
         $categories = str($request->category)->explode(',');
+        $templateClass = config('nova-texteditor.template_class');
+
         try {
-            $templates = Template::query()
+            $templates = $templateClass::query()
                 ->whereIn('category', $categories)
                 ->where(function ($query) use ($request) {
                     $query->whereNull('user_id')->orWhere('user_id', $request->user()->id);
@@ -36,7 +37,9 @@ class TemplateController
             return;
         }
         $category = str($request->category)->explode(',')->first();
-        $template = Template::create([
+        $templateClass = config('nova-texteditor.template_class');
+
+        $template = $templateClass::create([
             'name' => $request->name,
             'category' => $category,
             'subject' => $request->subject,

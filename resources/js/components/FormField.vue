@@ -287,6 +287,13 @@ export default {
         updateValue(value) {
             this.value = value;
         },
+        setInitialValue() {
+            this.value = !(
+                this.field.value === undefined || this.field.value === null
+            )
+                ? this.field.value
+                : this.fieldDefaultValue();
+        },
 
         fieldDefaultValue() {
             return this.field.defaultValue ?? "";
