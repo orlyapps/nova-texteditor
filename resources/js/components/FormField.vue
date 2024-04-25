@@ -255,10 +255,11 @@
             },
 
             fill(formData) {
+
                 if (this.saveAsJson) {
                     formData.append(
                         this.fieldAttribute,
-                        JSON.stringify(this.value)
+                        JSON.stringify(this.editor.getJSON())
                     );
                 } else {
                     formData.append(this.fieldAttribute, String(this.value));
