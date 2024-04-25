@@ -98,6 +98,11 @@ class TextEditor extends Field
         return $this->withMeta(['blocks' => $blocks]);
     }
 
+    public function withTextTemplates()
+    {
+        return $this->withMeta(['withTextTemplates' => true]);
+    }
+
     public function templateCategory($templateCategory)
     {
         return $this->withMeta(['templateCategory' => $templateCategory]);
