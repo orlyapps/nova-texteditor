@@ -1,6 +1,7 @@
 <template>
     <default-field :field="field" :errors="errors" :full-width-content="true" :show-help-text="showHelpText">
         <template #field>
+            <a name="nova-form-text-editor"></a>
             <div style="position: relative; top: 0; left: 0">
                 <div class="w-full overflow-break z-10 bg-gray-100 rounded" style="position: sticky; top: 0; left: 0">
                     <div class="p-1 flex flex-wrap items-center">
@@ -71,9 +72,21 @@
                                             </ScrollWrap>
                                         </DropdownMenu>
                                     </template>
+
                                 </Dropdown>
                             </div>
+
                         </div>
+                        <a v-if="resourceId && field.previewUrl" @click="onPreview($event)"
+                            class="cursor-pointer text-80 hover:text-primary mr-3 inline-flex items-center has-tooltip nova-router-link ml-2"
+                            data-testid="projects-items-0-view-button" dusk="404-view-button" data-original-title="null">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="18" viewBox="0 0 22 16" aria-labelledby="view" role="presentation"
+                                class="fill-current nova-icon">
+                                <path
+                                    d="M16.56 13.66a8 8 0 0 1-11.32 0L.3 8.7a1 1 0 0 1 0-1.42l4.95-4.95a8 8 0 0 1 11.32 0l4.95 4.95a1 1 0 0 1 0 1.42l-4.95 4.95-.01.01zm-9.9-1.42a6 6 0 0 0 8.48 0L19.38 8l-4.24-4.24a6 6 0 0 0-8.48 0L2.4 8l4.25 4.24h.01zM10.9 12a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm0-2a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" />
+                            </svg>
+                            <span class="inline-block ml-1">Vorschau</span>
+                        </a>
                     </div>
                 </div>
 
@@ -288,6 +301,15 @@
                 });
 
                 this.fetchTemplates();
+            },
+            async onPreview(e) {
+                const updateForm = this.$parent.$parent.$parent.$parent;
+                await updateForm.submitViaUpdateResourceAndContinueEditing(e);
+                let win = window.open(this.field.previewUrl + this.resourceId, "preview");
+                win.focus();
+                setTimeout(() => {
+                    document.querySelector("a[name='nova-form-text-editor']")?.scrollIntoView();
+                }, 2000);
             },
             async fetchTemplates() {
                 this.templates = (
