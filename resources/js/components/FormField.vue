@@ -305,7 +305,7 @@
             async onPreview(e) {
                 const updateForm = this.$parent.$parent.$parent.$parent;
                 await updateForm.submitViaUpdateResourceAndContinueEditing(e);
-                let win = window.open(this.field.previewUrl + this.resourceId, "preview");
+                let win = window.open(this.field.previewUrl + this.resourceId+'?watermark=1', "preview");
                 win.focus();
                 setTimeout(() => {
                     document.querySelector("a[name='nova-form-text-editor']")?.scrollIntoView();
