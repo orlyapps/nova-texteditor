@@ -429,7 +429,7 @@
                         limit: 5,
                         maxPatternLength: 32,
                         minMatchCharLength: 1,
-                        keys: ["text", "name"],
+                        keys: ["text", "name","shortcode"],
                     });
                     return fuse.search(query);
                 };
