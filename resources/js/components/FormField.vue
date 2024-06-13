@@ -283,7 +283,7 @@
                 let element = document.querySelector("[id^='subject']");
 
                 if (element && overwrite) {
-                    element.value = template.subject;
+                    element.value = template.subject ?? "";
                     element.dispatchEvent(new Event("input", {
                         bubbles: true
                     }));
