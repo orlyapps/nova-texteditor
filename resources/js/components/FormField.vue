@@ -147,6 +147,7 @@
     import Heading from "@tiptap/extension-heading";
     import Link from "@tiptap/extension-link";
     import Paragraph from "@tiptap/extension-paragraph";
+    import CodeBlock from "@tiptap/extension-code-block";
     import HardBreak from "@tiptap/extension-hard-break";
     import NormalButton from "./buttons/NormalButton";
     import HeadingButtons from "./buttons/HeadingButtons";
@@ -355,6 +356,7 @@
 
             let extensions = [
                 Dropcursor,
+                CodeBlock,
                 Document,
                 Bold,
                 Italic,
