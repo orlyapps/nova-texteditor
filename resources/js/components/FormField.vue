@@ -47,7 +47,7 @@
                                         </h3>
                                     </DropdownTrigger>
                                     <template #menu>
-                                        <DropdownMenu width="240">
+                                        <DropdownMenu width="350">
                                             <ScrollWrap :height="350" class="divide-y divide-gray-100 dark:divide-gray-800 divide-solid">
                                                 <div>
                                                     <DropdownMenuItem
