@@ -158,6 +158,7 @@ class TextEditor extends Field
         $variables = array_merge($this->defaultVariables(), call_user_func($this->variableResolver, $model));
 
         foreach ($variables as $variable => $value) {
+            $value = str_replace('"', '\"', $value);
             $attributeValue = str_replace('{{' . $variable . '}}', $value, $attributeValue);
             $attributeValue = str_replace('{{ ' . $variable . ' }}', $value, $attributeValue);
             $attributeValue = str_replace('{' . $variable . '}', $value, $attributeValue);
