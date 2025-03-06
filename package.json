@@ -61,6 +61,7 @@
         "@tiptap/vue-3": "^2.0",
         "fuse.js": "^7.0.0",
         "laravel-nova": "^1.12.3",
+        "laravel-nova-ui": "^0.4.12",
         "vue": "^3.0"
     }
 }

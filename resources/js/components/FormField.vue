@@ -41,10 +41,8 @@
                                         templates.length &&
                                         field.templateCategory
                                     ">
-                                    <DropdownTrigger class="px-3">
-                                        <h3 class="flex items-center">
-                                            Vorlage auswählen
-                                        </h3>
+                                    <DropdownTrigger>
+                                        <Button variant="ghost">Vorlage auswählen</Button>
                                     </DropdownTrigger>
                                     <template #menu>
                                         <DropdownMenu width="350">
@@ -90,7 +88,7 @@
                     </div>
                 </div>
 
-                <div class="nova-tiptap-editor mt-4 form-input form-input-bordered w-full pt-2 pb-2" :style="cssProps" v-show="mode == 'editor'">
+                <div class="nova-tiptap-editor mt-4 form-input form-control-bordered w-full pt-2 pb-2" :style="cssProps" v-show="mode == 'editor'">
                     <editor-content :editor="editor" class="prose" style="max-width: none" />
                 </div>
                 <div class="bg-primary-100 px-6 py-3 text-sm mt-3 rounded-lg" v-if="field.blocks">
@@ -110,7 +108,7 @@
                 <div v-if="field.showHelp" class="bg-primary-100 px-6 py-4 text-sm">
                     <p v-if="field.variables">
                         Folgende Platzhalter stehen zur Verfügung:
-                        <strong class="cursor-pointer hover:text-primary-500 bg-white px-2 py-1 rounded-lg" @click.prevent="addVariable(name)"
+                        <strong class="cursor-pointer hover:text-primary-500 bg-white px-2 py-1 rounded-lg inline-block mr-2" @click.prevent="addVariable(name)"
                             v-for="(value, name) in field.variables" v-html="'{ ' + name + ' }&nbsp;'" :key="name"></strong>
                     </p>
                 </div>
@@ -159,7 +157,7 @@
     import Dropcursor from "@tiptap/extension-dropcursor";
 
     import textTemplatesSearch from './text-templates-search.js'
-
+    import { Button } from 'laravel-nova-ui'
 
     import {
         FormField,
@@ -171,6 +169,7 @@
         props: ["resourceName", "resourceId", "field"],
 
         components: {
+            Button,
             EditorContent,
             NormalButton,
             HeadingButtons,
