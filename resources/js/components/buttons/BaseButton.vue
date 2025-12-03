@@ -5,7 +5,7 @@
         style="margin: 4px; min-width: 32px; height: 32px"
         :class="{
             'bg-primary-500 hover:bg-primary-400 text-white': isActive,
-            'bg-white hover:bg-gray-200 text-black': !isActive,
+            'bg-white hover:bg-gray-200 text-black dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200': !isActive,
             'opacity-50 pointer-events-none': isDisabled,
         }"
         @click="callClickMethod"
