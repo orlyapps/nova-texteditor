@@ -3,7 +3,7 @@
         <template #field>
             <a name="nova-form-text-editor"></a>
             <div style="position: relative; top: 0; left: 0">
-                <div class="w-full overflow-break z-10 bg-gray-100 rounded" style="position: sticky; top: 0; left: 0">
+                <div class="w-full overflow-break z-10 bg-gray-100 dark:bg-gray-800 rounded" style="position: sticky; top: 0; left: 0">
                     <div class="p-1 flex flex-wrap items-center">
                         <div v-for="button in buttons" :key="'button-' + button"
                             :class="{
@@ -88,27 +88,27 @@
                     </div>
                 </div>
 
-                <div class="nova-tiptap-editor mt-4 form-input form-control-bordered w-full pt-2 pb-2" :style="cssProps" v-show="mode == 'editor'">
+                <div class="nova-tiptap-editor mt-4 form-input form-control-bordered w-full pt-2 pb-2 dark:bg-gray-900 dark:text-gray-100 dark:border-gray-700" :style="cssProps" v-show="mode == 'editor'">
                     <editor-content :editor="editor" class="prose" style="max-width: none" />
                 </div>
-                <div class="bg-primary-100 px-6 py-3 text-sm mt-3 rounded-lg" v-if="field.blocks">
-                    <h3 class="text-gray-700 mb-1 font-bold">
+                <div class="bg-primary-100 dark:bg-gray-800 px-6 py-3 text-sm mt-3 rounded-lg" v-if="field.blocks">
+                    <h3 class="text-gray-700 dark:text-gray-200 mb-1 font-bold">
                         Variable Blöcke
                     </h3>
-                    <p class="mb-2">
+                    <p class="mb-2 dark:text-gray-300">
                         Diese Blöcke können im Text platziert werden und werden
                         automatisch durch den Inhalt ersetzt. Die Blöcke können
                         mit der Backspace-Taste (Rücktaste) gelöscht werden.
                     </p>
                     <button v-for="(name, key) in field.blocks" v-bind:key="key" @click.prevent="addElement(key)" type="button"
-                        class="mr-1 inline-flex items-center px-3 py-2 border border-gray-300 text-xs leading-4 font-medium rounded text-gray-700 bg-white hover:bg-primary-100 hover:text-primary-500 hover:border-primary-500">
+                        class="mr-1 inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 text-xs leading-4 font-medium rounded text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-primary-100 dark:hover:bg-gray-600 hover:text-primary-500 hover:border-primary-500">
                         {{ name }}
                     </button>
                 </div>
-                <div v-if="field.showHelp" class="bg-primary-100 px-6 py-4 text-sm">
+                <div v-if="field.showHelp" class="bg-primary-100 dark:bg-gray-800 px-6 py-4 text-sm dark:text-gray-300">
                     <p v-if="field.variables">
                         Folgende Platzhalter stehen zur Verfügung:
-                        <strong class="cursor-pointer hover:text-primary-500 bg-white px-2 py-1 rounded-lg inline-block mr-2" @click.prevent="addVariable(name)"
+                        <strong class="cursor-pointer hover:text-primary-500 bg-white dark:bg-gray-700 dark:text-gray-200 px-2 py-1 rounded-lg inline-block mr-2" @click.prevent="addVariable(name)"
                             v-for="(value, name) in field.variables" v-html="'{ ' + name + ' }&nbsp;'" :key="name"></strong>
                     </p>
                 </div>
@@ -581,6 +581,63 @@
                     background-color: #adf;
                     pointer-events: none;
                 }
+            }
+        }
+    }
+
+    // Dark mode styles
+    .dark {
+        .nova-tiptap-editor {
+            .ProseMirror {
+                color: #e5e7eb;
+
+                p.is-editor-empty:first-child::before {
+                    color: #6b7280;
+                }
+
+                hr {
+                    border-top-color: #4b5563;
+                }
+
+                table {
+                    td,
+                    th {
+                        border-color: #4b5563;
+                    }
+
+                    th {
+                        background-color: #374151;
+                    }
+                }
+
+                blockquote {
+                    border-left-color: #4b5563;
+                    color: #9ca3af;
+                }
+            }
+
+            .prose {
+                color: #e5e7eb;
+
+                h1, h2, h3, h4, h5, h6 {
+                    color: #f3f4f6;
+                }
+
+                strong {
+                    color: #f3f4f6;
+                }
+            }
+        }
+
+        // Content block styles for dark mode
+        .content-block {
+            background-color: #374151;
+            border-color: #4b5563;
+            color: #e5e7eb;
+
+            .content-block-title {
+                background-color: #4b5563;
+                color: #f3f4f6;
             }
         }
     }
