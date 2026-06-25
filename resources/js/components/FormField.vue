@@ -60,7 +60,7 @@
                                                         @click.stop="
                                                             selectTemplate(
                                                                 template,
-                                                                true
+                                                                field.syncTemplateSubject !== false
                                                             )
                                                         "
                                                         v-for="template in templates" :key="template.id">
@@ -461,7 +461,10 @@
                 const isSubjectEmpty = !document.querySelector("[id^='subject']") ||
                     document.querySelector("[id^='subject']").value.length === 0;
 
-                this.selectTemplate(this.templates[0], isSubjectEmpty);
+                this.selectTemplate(
+                    this.templates[0],
+                    this.field.syncTemplateSubject !== false && isSubjectEmpty
+                );
             }
         },
 

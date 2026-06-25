@@ -113,6 +113,17 @@ class TextEditor extends Field
         return $this->withMeta(['selectFirstTemplate' => true]);
     }
 
+    /**
+     * Steuert, ob die Vorlagen-Auswahl (Dropdown und selectFirstTemplate) das Betreff-Feld setzt.
+     *
+     * @param  bool  $sync
+     * @return $this
+     */
+    public function syncTemplateSubject(bool $sync = true)
+    {
+        return $this->withMeta(['syncTemplateSubject' => $sync]);
+    }
+
     public function showHelp()
     {
         return $this->withMeta(['showHelp' => true]);
