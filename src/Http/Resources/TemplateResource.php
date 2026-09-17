@@ -19,7 +19,8 @@ class TemplateResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'category' => $this->category,
-            'category_label' => config('nova-texteditor.categories')[$this->category] ?? $this->category,
+            // Ohne Übersetzung null statt des rohen Schlüssels (z. B. „course“) — der Editor blendet die Kategorie dann aus.
+            'category_label' => config('nova-texteditor.categories')[$this->category] ?? null,
             'matches' => in_array($this->category, str($request->category)->explode(',')->all(), true),
             'subject' => $this->subject,
             'text' => $this->text,

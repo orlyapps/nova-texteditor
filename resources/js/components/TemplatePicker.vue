@@ -36,7 +36,7 @@
 
                 <template v-else>
                     <div v-if="!query && !matching.length" class="texteditor-templates__hint">
-                        Keine Vorlagen für {{ categoryLabels }} vorhanden.
+                        {{ categoryLabels ? `Keine Vorlagen für ${categoryLabels} vorhanden.` : "Keine passenden Vorlagen vorhanden." }}
                         <template v-if="others.length">Du kannst eine Vorlage aus einer anderen Kategorie laden.</template>
                     </div>
 
@@ -54,7 +54,7 @@
                         >
                             <span class="texteditor-menu-item__text">
                                 <span class="texteditor-menu-item__label">
-                                    <span v-if="!template.matches" class="texteditor-templates__category">{{ template.category_label }} ›</span>
+                                    <span v-if="!template.matches && template.category_label" class="texteditor-templates__category">{{ template.category_label }} ›</span>
                                     {{ template.name }}
                                 </span>
                                 <span v-if="preview(template)" class="texteditor-menu-item__subtitle">{{ preview(template) }}</span>
@@ -94,7 +94,7 @@ export default {
 
     props: {
         templates: { type: Array, required: true },
-        categoryLabels: { type: String, default: "diese Kategorie" },
+        categoryLabels: { type: String, default: null },
         canCreate: { type: Boolean, default: false },
         loading: { type: Boolean, default: false },
         compact: { type: Boolean, default: false },
@@ -118,7 +118,7 @@ export default {
                 keys: [
                     { name: "name", weight: 3 },
                     { name: "subject", weight: 2 },
-                    { name: "category_label", weight: 1 },
+                    { name: "category_label", getFn: (template) => template.category_label ?? "", weight: 1 },
                     { name: "plainText", getFn: (template) => stripHtml(template.text), weight: 1 },
                 ],
             });
@@ -140,12 +140,12 @@ export default {
 
             return this.query
                 ? others
-                : [...others].sort((a, b) => a.category_label.localeCompare(b.category_label) || a.name.localeCompare(b.name));
+                : [...others].sort((a, b) => (a.category_label ?? "").localeCompare(b.category_label ?? "") || a.name.localeCompare(b.name));
         },
 
         sections() {
             return [
-                { key: "matching", title: this.categoryLabels, templates: this.matching },
+                { key: "matching", title: this.categoryLabels ?? "Passende Vorlagen", templates: this.matching },
                 { key: "others", title: "Andere Kategorien", templates: this.others },
             ].filter((section) => section.templates.length);
         },

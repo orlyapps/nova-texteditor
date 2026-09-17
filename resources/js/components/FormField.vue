@@ -366,8 +366,11 @@
                     .filter(Boolean);
             },
 
+            /**
+             * Bezeichnungen der Kategorien des Feldes; `null`, wenn keine übersetzt ist (nie den rohen Schlüssel zeigen).
+             */
             categoryLabels() {
-                return this.categoryList.map((category) => this.categoryLabel(category)).join(" / ");
+                return this.categoryList.map((category) => this.templateCategories[category]).filter(Boolean).join(" / ") || null;
             },
 
             matchingTemplates() {
@@ -487,7 +490,7 @@
             },
 
             categoryLabel(category) {
-                return this.templateCategories[category] ?? category;
+                return this.templateCategories[category] ?? "Diese Stelle";
             },
 
             /**
