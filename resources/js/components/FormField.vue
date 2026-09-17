@@ -124,37 +124,33 @@
     } from "@tiptap/vue-3";
     import Fuse from "fuse.js";
 
-    import Text from "@tiptap/extension-text";
-
-    import Blockquote from "@tiptap/extension-blockquote";
-    import Bold from "@tiptap/extension-bold";
-    import BulletList from "@tiptap/extension-bullet-list";
-    import Highlight from "@tiptap/extension-highlight";
-    import HorizontalRule from "@tiptap/extension-horizontal-rule";
-    import Italic from "@tiptap/extension-italic";
-    import ListItem from "@tiptap/extension-list-item";
-    import OrderedList from "@tiptap/extension-ordered-list";
-    import Strike from "@tiptap/extension-strike";
-    import Subscript from "@tiptap/extension-subscript";
-    import Superscript from "@tiptap/extension-superscript";
-    import TextStyle from "@tiptap/extension-text-style";
-    import Underline from "@tiptap/extension-underline";
-    import TextAlign from "@tiptap/extension-text-align";
-    import History from "@tiptap/extension-history";
-    import Document from "@tiptap/extension-document";
-    import Heading from "@tiptap/extension-heading";
-    import Link from "@tiptap/extension-link";
-    import Paragraph from "@tiptap/extension-paragraph";
-    import CodeBlock from "@tiptap/extension-code-block";
-    import HardBreak from "@tiptap/extension-hard-break";
+    import { Text } from "@tiptap/extension-text";
+    import { Blockquote } from "@tiptap/extension-blockquote";
+    import { Bold } from "@tiptap/extension-bold";
+    import { BulletList, ListItem, OrderedList } from "@tiptap/extension-list";
+    import { Highlight } from "@tiptap/extension-highlight";
+    import { HorizontalRule } from "@tiptap/extension-horizontal-rule";
+    import { Italic } from "@tiptap/extension-italic";
+    import { Strike } from "@tiptap/extension-strike";
+    import { Subscript } from "@tiptap/extension-subscript";
+    import { Superscript } from "@tiptap/extension-superscript";
+    import { FontSize, TextStyle } from "@tiptap/extension-text-style";
+    import { Underline } from "@tiptap/extension-underline";
+    import { TextAlign } from "@tiptap/extension-text-align";
+    import { Document } from "@tiptap/extension-document";
+    import { Heading } from "@tiptap/extension-heading";
+    import { Paragraph } from "@tiptap/extension-paragraph";
+    import { CodeBlock } from "@tiptap/extension-code-block";
+    import { HardBreak } from "@tiptap/extension-hard-break";
+    import { Mention } from "@tiptap/extension-mention";
+    import { Dropcursor, Gapcursor, UndoRedo } from "@tiptap/extensions";
+    import Link from "../extensions/link";
+    import { resolveCustomExtensions } from "../tiptap";
     import NormalButton from "./buttons/NormalButton";
     import HeadingButtons from "./buttons/HeadingButtons";
     import TextAlignButtons from "./buttons/TextAlignButtons";
     import HistoryButtons from "./buttons/HistoryButtons";
     import BaseButton from "./buttons/BaseButton.vue";
-    import Mention from '@tiptap/extension-mention'
-    import FontSize from "../font-size";
-    import Dropcursor from "@tiptap/extension-dropcursor";
 
     import textTemplatesSearch from './text-templates-search.js'
     import { Button } from 'laravel-nova-ui'
@@ -288,7 +284,7 @@
                     }));
                 }
 
-                this.editor.commands.setContent(template.text, true);
+                this.editor.commands.setContent(template.text, { emitUpdate: true });
             },
             async saveTemplate() {
                 let name = window.prompt("Name der Vorlage");
@@ -355,6 +351,7 @@
 
             let extensions = [
                 Dropcursor,
+                Gapcursor,
                 CodeBlock,
                 Document,
                 Bold,
@@ -369,7 +366,7 @@
                 Heading.configure({
                     levels: [2, 3, 4],
                 }),
-                Link.configure(),
+                Link,
                 Blockquote.extend({
                     addAttributes() {
                         return {
@@ -409,9 +406,9 @@
                 TextAlign.configure({
                     types: ["heading", "paragraph"],
                 }),
-                History,
+                UndoRedo,
                 Text,
-                ...window.TextEditorNotes,
+                ...resolveCustomExtensions(),
             ];
 
             const context = this;
@@ -441,18 +438,17 @@
             this.editor = new Editor({
                 extensions: extensions,
                 content: this.contentWithTrailingParagraph,
-                onCreate() {
+                onCreate({ editor }) {
                     try {
                         let content = JSON.parse(context.value);
-                        this.commands.setContent(content);
+                        editor.commands.setContent(content);
                     } catch {}
                 },
-                onUpdate() {
+                onUpdate({ editor }) {
                     if (context.saveAsJson) {
-                        let jsonContent = this.getJSON();
-                        context.updateValue(jsonContent);
+                        context.updateValue(editor.getJSON());
                     } else {
-                        context.updateValue(this.getHTML());
+                        context.updateValue(editor.getHTML());
                     }
                 },
             });
@@ -468,8 +464,8 @@
             }
         },
 
-        beforeDestroy() {
-            this.editor.destroy();
+        beforeUnmount() {
+            this.editor?.destroy();
         },
     };
 </script>
