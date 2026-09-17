@@ -277,6 +277,15 @@ export default {
 
     /* Schmale Screens: Einstellungen in eine eigene Zeile unter den Kopf. */
     @media (max-width: 639px) {
+        /* Titel darf schrumpfen, damit Griff, Titel und Aktionen in einer Zeile bleiben. */
+        &__title {
+            flex: 1 1 0;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
         &__options {
             order: 3;
             flex-basis: 100%;

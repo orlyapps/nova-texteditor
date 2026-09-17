@@ -2,128 +2,183 @@
     <default-field :field="field" :errors="errors" :full-width-content="true" :show-help-text="showHelpText">
         <template #field>
             <a name="nova-form-text-editor"></a>
-            <div style="position: relative; top: 0; left: 0">
-                <div class="w-full overflow-break z-10 bg-gray-100 dark:bg-gray-800 rounded" style="position: sticky; top: 0; left: 0">
-                    <div class="p-1 flex flex-wrap items-center">
-                        <div v-for="button in buttons" :key="'button-' + button"
-                            :class="{
-                                'inline-block': button != 'br',
-                            }">
-                            <template v-if="button == '|'">
-                                <div class="w-3">&nbsp;&nbsp;</div>
+            <div class="texteditor">
+                <toolbar v-if="editor" class="texteditor__toolbar" :editor="editor" :buttons="field.buttons" @edit-link="$refs.bubble?.startLinkEditing()">
+                    <template #end="{ compact }">
+                        <toolbar-menu
+                            v-if="blockOptions.length"
+                            :icon="icons.Squares2X2Icon"
+                            label="Block"
+                            title="Variablen Block einfügen"
+                            :show-label="!compact"
+                        >
+                            <template #default="{ close }">
+                                <div class="texteditor-menu-hint">Blöcke werden beim Versand automatisch durch den Inhalt ersetzt.</div>
+                                <button v-for="block in blockOptions" :key="block.type" type="button" class="texteditor-menu-item" @click="addElement(block.type); close()">
+                                    <squares-2-x-2-icon class="texteditor-menu-item__icon" />
+                                    <span class="texteditor-menu-item__label">{{ block.label }}</span>
+                                </button>
                             </template>
+                        </toolbar-menu>
 
-                            <template v-else-if="button == 'br'"> </template>
-                            <template v-else-if="button == 'textAlign'">
-                                <text-align-buttons :editor="editor" :mode="mode" :alignments="alignments" :alignElements="alignElements"
-                                    :defaultAlignment="defaultAlignment">
-                                </text-align-buttons>
+                        <toolbar-menu
+                            v-if="variableNames.length"
+                            :icon="icons.VariableIcon"
+                            label="Platzhalter"
+                            title="Platzhalter einfügen"
+                            :show-label="!compact"
+                            popover-class="texteditor-variables"
+                        >
+                            <template #default="{ close }">
+                                <div class="texteditor-menu-hint">Platzhalter werden beim Speichern bzw. Versand ersetzt.</div>
+                                <button v-for="name in variableNames" :key="name" type="button" class="texteditor-menu-item" @click="addVariable(name); close()">
+                                    <span class="texteditor-menu-item__text">
+                                        <span class="texteditor-menu-item__label"><code>{ {{ name }} }</code></span>
+                                        <span v-if="variablePreview(name)" class="texteditor-menu-item__subtitle">{{ variablePreview(name) }}</span>
+                                    </span>
+                                </button>
                             </template>
-                            <template v-else-if="button == 'heading'">
-                                <heading-buttons :headingLevels="headingLevels" :mode="mode" :editor="editor">
-                                </heading-buttons>
-                            </template>
+                        </toolbar-menu>
 
-                            <template v-else-if="button == 'history'">
-                                <history-buttons :editor="editor" :mode="mode">
-                                </history-buttons>
-                            </template>
+                        <template v-if="field.templateCategory">
+                            <template-picker
+                                :templates="templates"
+                                :category-labels="categoryLabels"
+                                :can-create="canCreateTemplates"
+                                :loading="loadingTemplates"
+                                :compact="compact"
+                                @open="fetchTemplates"
+                                @select="selectTemplate($event, field.syncTemplateSubject !== false)"
+                                @save-new="openDialog('save')"
+                            />
 
-                            <template v-else>
-                                <normal-button :editor="editor" :button="button" :mode="mode">
-                                </normal-button>
-                            </template>
-                        </div>
-                        <div>
-                            <div class="flex">
-                                <Dropdown class="bg-30 hover:bg-40 mr-3 rounded"
-                                    v-if="
-                                        templates.length &&
-                                        field.templateCategory
-                                    ">
-                                    <DropdownTrigger>
-                                        <Button variant="ghost">Vorlage auswählen</Button>
-                                    </DropdownTrigger>
-                                    <template #menu>
-                                        <DropdownMenu width="350">
-                                            <ScrollWrap :height="350" class="divide-y divide-gray-100 dark:divide-gray-800 divide-solid">
-                                                <div>
-                                                    <DropdownMenuItem
-                                                        @click.stop="
-                                                            saveTemplate()
-                                                        ">
-                                                        Als Vorlage speichern
-                                                    </DropdownMenuItem>
-                                                </div>
-                                                <div class="py-1">
-                                                    <DropdownMenuItem
-                                                        @click.stop="
-                                                            selectTemplate(
-                                                                template,
-                                                                field.syncTemplateSubject !== false
-                                                            )
-                                                        "
-                                                        v-for="template in templates" :key="template.id">
-                                                        {{ template . name }}
-                                                    </DropdownMenuItem>
-                                                </div>
-                                            </ScrollWrap>
-                                        </DropdownMenu>
+                            <div v-if="loadedTemplate" class="texteditor-loaded" :title="`Geladene Vorlage: ${loadedTemplate.name}`">
+                                <span class="texteditor-loaded__name">{{ loadedTemplate.name }}</span>
+
+                                <toolbar-menu
+                                    v-if="loadedTemplate.can_update || canCreateTemplates"
+                                    :icon="icons.BookmarkSquareIcon"
+                                    label="Vorlage speichern"
+                                    placement="bottom-end"
+                                >
+                                    <template #default="{ close }">
+                                        <button v-if="loadedTemplate.can_update" type="button" class="texteditor-menu-item" @click="openDialog('overwrite'); close()">
+                                            <arrow-down-on-square-icon class="texteditor-menu-item__icon" />
+                                            <span class="texteditor-menu-item__label">„{{ loadedTemplate.name }}“ überschreiben…</span>
+                                        </button>
+                                        <button v-if="canCreateTemplates" type="button" class="texteditor-menu-item" @click="openDialog('save'); close()">
+                                            <plus-icon class="texteditor-menu-item__icon" />
+                                            <span class="texteditor-menu-item__label">Als neue Vorlage speichern…</span>
+                                        </button>
                                     </template>
+                                </toolbar-menu>
 
-                                </Dropdown>
+                                <toolbar-button :icon="icons.XMarkIcon" label="Vorlagen-Verknüpfung lösen" @click="loadedTemplate = null" />
                             </div>
+                        </template>
 
-                        </div>
-                        <a v-if="resourceId && field.previewUrl" @click="onPreview($event)"
-                            class="cursor-pointer text-80 hover:text-primary mr-3 inline-flex items-center has-tooltip nova-router-link ml-2"
-                            data-testid="projects-items-0-view-button" dusk="404-view-button" data-original-title="null">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="18" viewBox="0 0 22 16" aria-labelledby="view" role="presentation"
-                                class="fill-current nova-icon">
-                                <path
-                                    d="M16.56 13.66a8 8 0 0 1-11.32 0L.3 8.7a1 1 0 0 1 0-1.42l4.95-4.95a8 8 0 0 1 11.32 0l4.95 4.95a1 1 0 0 1 0 1.42l-4.95 4.95-.01.01zm-9.9-1.42a6 6 0 0 0 8.48 0L19.38 8l-4.24-4.24a6 6 0 0 0-8.48 0L2.4 8l4.25 4.24h.01zM10.9 12a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm0-2a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" />
-                            </svg>
-                            <span class="inline-block ml-1">Vorschau</span>
-                        </a>
-                    </div>
-                </div>
+                        <toolbar-button
+                            v-if="resourceId && field.previewUrl"
+                            :icon="icons.EyeIcon"
+                            label="Vorschau"
+                            :show-label="!compact"
+                            @click="onPreview($event)"
+                        />
+                    </template>
+                </toolbar>
 
-                <div class="nova-tiptap-editor mt-4 form-input form-control-bordered w-full pt-2 pb-2 dark:bg-gray-900 dark:text-gray-100 dark:border-gray-700" :style="cssProps" v-show="mode == 'editor'">
+                <div class="nova-tiptap-editor texteditor__content form-input form-control-bordered w-full dark:bg-gray-900 dark:text-gray-100 dark:border-gray-700" :style="cssProps">
                     <editor-content :editor="editor" class="prose" style="max-width: none" />
                 </div>
-                <div class="bg-primary-100 dark:bg-gray-800 px-6 py-3 text-sm mt-3 rounded-lg" v-if="field.blocks">
-                    <h3 class="text-gray-700 dark:text-gray-200 mb-1 font-bold">
-                        Variable Blöcke
-                    </h3>
-                    <p class="mb-2 dark:text-gray-300">
-                        Diese Blöcke können im Text platziert werden und werden
-                        automatisch durch den Inhalt ersetzt. Die Blöcke können
-                        mit der Backspace-Taste (Rücktaste) gelöscht werden.
-                    </p>
-                    <button v-for="(name, key) in field.blocks" v-bind:key="key" @click.prevent="addElement(key)" type="button"
-                        class="mr-1 inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 text-xs leading-4 font-medium rounded text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-primary-100 dark:hover:bg-gray-600 hover:text-primary-500 hover:border-primary-500">
-                        {{ name }}
-                    </button>
-                </div>
-                <div v-if="field.showHelp" class="bg-primary-100 dark:bg-gray-800 px-6 py-4 text-sm dark:text-gray-300">
-                    <p v-if="field.variables">
-                        Folgende Platzhalter stehen zur Verfügung:
-                        <strong class="cursor-pointer hover:text-primary-500 bg-white dark:bg-gray-700 dark:text-gray-200 px-2 py-1 rounded-lg inline-block mr-2" @click.prevent="addVariable(name)"
-                            v-for="(value, name) in field.variables" v-html="'{ ' + name + ' }&nbsp;'" :key="name"></strong>
-                    </p>
-                </div>
+
+                <p v-if="editor && slashHint" class="texteditor__hint">
+                    Tipp: Tippe <kbd>/</kbd> für {{ slashHint }}.
+                </p>
+
+                <editor-bubble-menu v-if="editor" ref="bubble" :editor="editor" />
             </div>
+
+            <Modal :show="dialog === 'replace'" size="md" role="alertdialog" @close-via-escape="closeDialog">
+                <form class="mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden" @submit.prevent="confirmReplace">
+                    <ModalHeader>Aktuellen Text ersetzen?</ModalHeader>
+                    <ModalContent>
+                        <p class="leading-normal">
+                            Der Text im Editor wurde bearbeitet. Wenn Du „{{ pendingTemplate?.template.name }}“ lädst, werden diese Änderungen ersetzt.
+                        </p>
+                    </ModalContent>
+                    <ModalFooter>
+                        <div class="ml-auto flex items-center gap-3">
+                            <Button variant="link" state="mellow" label="Abbrechen" @click.prevent="closeDialog" />
+                            <Button type="submit" label="Vorlage laden" />
+                        </div>
+                    </ModalFooter>
+                </form>
+            </Modal>
+
+            <Modal :show="dialog === 'save'" size="md" @close-via-escape="closeDialog">
+                <form class="mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden" @submit.prevent="saveNewTemplate">
+                    <ModalHeader>Als neue Vorlage speichern</ModalHeader>
+                    <ModalContent>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block mb-1 text-sm font-semibold" for="texteditor-template-name">Name der Vorlage</label>
+                                <input
+                                    id="texteditor-template-name"
+                                    ref="templateName"
+                                    v-model="templateForm.name"
+                                    type="text"
+                                    maxlength="255"
+                                    required
+                                    class="w-full form-control form-input form-control-bordered"
+                                    placeholder="z. B. Kursbestätigung Welpen"
+                                />
+                            </div>
+                            <div v-if="categoryList.length > 1">
+                                <label class="block mb-1 text-sm font-semibold" for="texteditor-template-category">Kategorie</label>
+                                <select id="texteditor-template-category" v-model="templateForm.category" class="w-full form-control form-select form-control-bordered">
+                                    <option v-for="category in categoryList" :key="category" :value="category">{{ categoryLabel(category) }}</option>
+                                </select>
+                            </div>
+                            <p v-else class="text-sm text-gray-500">Kategorie: {{ categoryLabel(categoryList[0]) }}</p>
+                            <p class="text-sm text-gray-500">
+                                Gespeichert wird der aktuelle Text{{ syncsSubject ? " inklusive Betreff" : "" }}.
+                            </p>
+                            <p v-if="dialogError" class="text-sm text-red-500">{{ dialogError }}</p>
+                        </div>
+                    </ModalContent>
+                    <ModalFooter>
+                        <div class="ml-auto flex items-center gap-3">
+                            <Button variant="link" state="mellow" label="Abbrechen" @click.prevent="closeDialog" />
+                            <Button type="submit" label="Vorlage speichern" :loading="savingTemplate" :disabled="!templateForm.name.trim()" />
+                        </div>
+                    </ModalFooter>
+                </form>
+            </Modal>
+
+            <Modal :show="dialog === 'overwrite'" size="md" role="alertdialog" @close-via-escape="closeDialog">
+                <form class="mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden" @submit.prevent="overwriteTemplate">
+                    <ModalHeader>Vorlage überschreiben?</ModalHeader>
+                    <ModalContent>
+                        <p class="leading-normal">
+                            „{{ loadedTemplate?.name }}“ ({{ loadedTemplate?.category_label }}) wird mit dem aktuellen Text{{ syncsSubject ? " und Betreff" : "" }} ersetzt.
+                            Das betrifft alle, die diese Vorlage künftig verwenden.
+                        </p>
+                        <p v-if="dialogError" class="mt-3 text-sm text-red-500">{{ dialogError }}</p>
+                    </ModalContent>
+                    <ModalFooter>
+                        <div class="ml-auto flex items-center gap-3">
+                            <Button variant="link" state="mellow" label="Abbrechen" @click.prevent="closeDialog" />
+                            <Button type="submit" state="danger" label="Überschreiben" :loading="savingTemplate" />
+                        </div>
+                    </ModalFooter>
+                </form>
+            </Modal>
         </template>
     </default-field>
 </template>
 
 <script>
-    import {
-        Editor,
-        EditorContent
-    } from "@tiptap/vue-3";
-    import Fuse from "fuse.js";
-
+    import { Editor, EditorContent } from "@tiptap/vue-3";
     import { Text } from "@tiptap/extension-text";
     import { Blockquote } from "@tiptap/extension-blockquote";
     import { Bold } from "@tiptap/extension-bold";
@@ -142,108 +197,155 @@
     import { Paragraph } from "@tiptap/extension-paragraph";
     import { CodeBlock } from "@tiptap/extension-code-block";
     import { HardBreak } from "@tiptap/extension-hard-break";
-    import { Mention } from "@tiptap/extension-mention";
     import { Dropcursor, Gapcursor, UndoRedo } from "@tiptap/extensions";
-    import Link from "../extensions/link";
-    import { resolveCustomExtensions } from "../tiptap";
-    import NormalButton from "./buttons/NormalButton";
-    import HeadingButtons from "./buttons/HeadingButtons";
-    import TextAlignButtons from "./buttons/TextAlignButtons";
-    import HistoryButtons from "./buttons/HistoryButtons";
-    import BaseButton from "./buttons/BaseButton.vue";
-
-    import textTemplatesSearch from './text-templates-search.js'
-    import { Button } from 'laravel-nova-ui'
-
     import {
-        FormField,
-        HandlesValidationErrors
-    } from "laravel-nova";
+        ArrowDownOnSquareIcon,
+        BookmarkSquareIcon,
+        ChatBubbleBottomCenterTextIcon,
+        EyeIcon,
+        ListBulletIcon,
+        MinusIcon,
+        NumberedListIcon,
+        PlusIcon,
+        Squares2X2Icon,
+        VariableIcon,
+        XMarkIcon,
+    } from "@heroicons/vue/20/solid";
+    import { Button } from "laravel-nova-ui";
+    import { FormField, HandlesValidationErrors } from "laravel-nova";
+    import Link from "../extensions/link";
+    import SlashCommand from "../extensions/slash-command";
+    import VariableHighlight from "../extensions/variable-highlight";
+    import { resolveCustomExtensions } from "../tiptap";
+    import EditorBubbleMenu from "./EditorBubbleMenu.vue";
+    import TemplatePicker from "./TemplatePicker.vue";
+    import Toolbar from "./toolbar/Toolbar.vue";
+    import ToolbarButton from "./toolbar/ToolbarButton.vue";
+    import ToolbarMenu from "./toolbar/ToolbarMenu.vue";
+
+    const withDirAttribute = (extension) =>
+        extension.extend({
+            addAttributes() {
+                return {
+                    ...this.parent?.(),
+                    dir: String,
+                };
+            },
+        });
 
     export default {
         mixins: [FormField, HandlesValidationErrors],
         props: ["resourceName", "resourceId", "field"],
 
         components: {
+            ArrowDownOnSquareIcon,
             Button,
+            EditorBubbleMenu,
             EditorContent,
-            NormalButton,
-            HeadingButtons,
-            TextAlignButtons,
-            HistoryButtons,
-            BaseButton,
+            PlusIcon,
+            Squares2X2Icon,
+            TemplatePicker,
+            Toolbar,
+            ToolbarButton,
+            ToolbarMenu,
         },
 
         data() {
             return {
                 editor: null,
-                mode: "editor",
-                placeholder: "",
                 templates: [],
+                templateCategories: {},
+                canCreateTemplates: false,
+                loadingTemplates: false,
+                loadedTemplate: null,
+                pendingTemplate: null,
+                lastAppliedHtml: "",
                 textTemplates: [],
+                dialog: null,
+                dialogError: null,
+                savingTemplate: false,
+                templateForm: { name: "", category: null },
+                icons: { BookmarkSquareIcon, EyeIcon, Squares2X2Icon, VariableIcon, XMarkIcon },
             };
         },
 
         computed: {
             contentWithTrailingParagraph() {
-                if (
-                    _.isString(this.value) &&
-                    _.endsWith(_.trim(this.value), "content-block>")
-                ) {
+                if (_.isString(this.value) && _.endsWith(_.trim(this.value), "content-block>")) {
                     return this.value + "<p></p>";
                 }
 
                 return this.value;
             },
-            headingLevels() {
-                return [2, 3, 4];
-            },
-            buttons() {
-                let tmpButtons = this.field.buttons ?
-                    this.field.buttons : [
-                        "bold",
-                        "italic",
-                        "strike",
-                        "|",
-                        "underline",
-                        "highlight",
-                        "|",
-                        "textStyle",
-                        "heading",
-                        "|",
-                        "bulletList",
-                        "orderedList",
-                        "sinkListItem",
-                        "liftListItem",
-                        "|",
-                        "blockquote",
-                        "hardBreak",
-                        "textAlign",
-                        "history",
-                    ];
-
-                return tmpButtons;
-            },
-
-            alignments() {
-                return ["left", "center", "end", "justify"];
-            },
-
-            alignElements() {
-                return ["heading", "paragraph"];
-            },
-
-            defaultAlignment() {
-                return "left";
-            },
 
             cssProps() {
                 return {
-                    "--text-align": this.defaultAlignment,
+                    "--text-align": "left",
                 };
             },
+
             saveAsJson() {
                 return this.field.saveAsJson ? this.field.saveAsJson : false;
+            },
+
+            syncsSubject() {
+                return this.field.syncTemplateSubject !== false && !!this.subjectInput();
+            },
+
+            categoryList() {
+                return String(this.field.templateCategory ?? "")
+                    .split(",")
+                    .map((category) => category.trim())
+                    .filter(Boolean);
+            },
+
+            categoryLabels() {
+                return this.categoryList.map((category) => this.categoryLabel(category)).join(" / ");
+            },
+
+            matchingTemplates() {
+                return this.templates.filter((template) => template.matches);
+            },
+
+            /**
+             * Nur Blöcke, deren Node die App auch registriert hat — sonst würde insertContent still scheitern.
+             */
+            blockOptions() {
+                if (!this.editor || !this.field.blocks) {
+                    return [];
+                }
+
+                return Object.entries(this.field.blocks)
+                    .filter(([type]) => this.editor.schema.nodes[type])
+                    .map(([type, label]) => ({ type, label }));
+            },
+
+            variableNames() {
+                return Object.keys(this.field.variables ?? {});
+            },
+
+            slashHint() {
+                const parts = ["Formate"];
+
+                if (this.blockOptions.length) {
+                    parts.push("Blöcke");
+                }
+
+                if (this.variableNames.length) {
+                    parts.push("Platzhalter");
+                }
+
+                if (this.field.withTextTemplates) {
+                    parts.push("Textbausteine");
+                }
+
+                return parts.length > 1 ? parts.join(", ").replace(/, ([^,]*)$/, " und $1") : null;
+            },
+        },
+
+        watch: {
+            "field.variables"() {
+                this.editor?.commands.refreshVariableHighlight();
             },
         },
 
@@ -251,12 +353,9 @@
             updateValue(value) {
                 this.value = value;
             },
+
             setInitialValue() {
-                this.value = !(
-                        this.field.value === undefined || this.field.value === null
-                    ) ?
-                    this.field.value :
-                    this.fieldDefaultValue();
+                this.value = !(this.field.value === undefined || this.field.value === null) ? this.field.value : this.fieldDefaultValue();
             },
 
             fieldDefaultValue() {
@@ -264,203 +363,314 @@
             },
 
             fill(formData) {
-
                 if (this.saveAsJson) {
-                    formData.append(
-                        this.fieldAttribute,
-                        JSON.stringify(this.editor.getJSON())
-                    );
+                    formData.append(this.fieldAttribute, JSON.stringify(this.editor.getJSON()));
                 } else {
                     formData.append(this.fieldAttribute, String(this.value));
                 }
             },
-            selectTemplate(template, overwrite = false) {
-                let element = document.querySelector("[id^='subject']");
 
-                if (element && overwrite) {
+            subjectInput() {
+                return document.querySelector("[id^='subject']");
+            },
+
+            categoryLabel(category) {
+                return this.templateCategories[category] ?? category;
+            },
+
+            /**
+             * Lädt eine Vorlage — fragt vorher nach, wenn der aktuelle Text seit dem letzten Laden bearbeitet wurde.
+             */
+            selectTemplate(template, overwriteSubject = false) {
+                if (this.isEditedSinceLastApply()) {
+                    this.pendingTemplate = { template, overwriteSubject };
+                    this.openDialog("replace");
+
+                    return;
+                }
+
+                this.applyTemplate(template, overwriteSubject);
+            },
+
+            confirmReplace() {
+                const { template, overwriteSubject } = this.pendingTemplate;
+
+                this.closeDialog();
+                this.applyTemplate(template, overwriteSubject);
+            },
+
+            applyTemplate(template, overwriteSubject = false) {
+                const element = this.subjectInput();
+
+                if (element && overwriteSubject) {
                     element.value = template.subject ?? "";
-                    element.dispatchEvent(new Event("input", {
-                        bubbles: true
-                    }));
+                    element.dispatchEvent(new Event("input", { bubbles: true }));
                 }
 
                 this.editor.commands.setContent(template.text, { emitUpdate: true });
+                this.loadedTemplate = template;
+                this.lastAppliedHtml = this.editor.getHTML();
             },
-            async saveTemplate() {
-                let name = window.prompt("Name der Vorlage");
 
-                await Nova.request().post("/api/templates", {
-                    category: this.field.templateCategory,
-                    text: this.editor.getHTML(),
-                    subject: document.querySelector("[id^='subject']")?.value,
-                    name,
-                });
-
-                this.fetchTemplates();
+            isEditedSinceLastApply() {
+                return !!this.editor && !this.editor.isEmpty && this.editor.getHTML() !== this.lastAppliedHtml;
             },
+
+            openDialog(dialog) {
+                this.dialog = dialog;
+                this.dialogError = null;
+
+                if (dialog === "save") {
+                    this.templateForm = { name: "", category: this.loadedTemplate?.matches ? this.loadedTemplate.category : this.categoryList[0] };
+                    this.$nextTick(() => this.$refs.templateName?.focus());
+                }
+            },
+
+            closeDialog() {
+                this.dialog = null;
+                this.dialogError = null;
+                this.pendingTemplate = null;
+            },
+
+            async saveNewTemplate() {
+                await this.persistTemplate(async () => {
+                    const { data } = await Nova.request().post("/api/templates", {
+                        category: this.templateForm.category,
+                        name: this.templateForm.name.trim(),
+                        text: this.editor.getHTML(),
+                        subject: this.syncsSubject ? this.subjectInput()?.value : null,
+                    });
+
+                    return data.data;
+                }, "gespeichert");
+            },
+
+            async overwriteTemplate() {
+                await this.persistTemplate(async () => {
+                    const payload = { text: this.editor.getHTML() };
+
+                    if (this.syncsSubject) {
+                        payload.subject = this.subjectInput()?.value ?? null;
+                    }
+
+                    const { data } = await Nova.request().put(`/api/templates/${this.loadedTemplate.id}`, payload);
+
+                    return data.data;
+                }, "überschrieben");
+            },
+
+            async persistTemplate(request, verb) {
+                this.savingTemplate = true;
+                this.dialogError = null;
+
+                try {
+                    const saved = await request();
+
+                    await this.fetchTemplates();
+                    this.loadedTemplate = this.templates.find((template) => template.id === saved.id) ?? saved;
+                    this.lastAppliedHtml = this.editor.getHTML();
+                    this.closeDialog();
+                    Nova.success(`Vorlage „${saved.name}“ ${verb}.`);
+                } catch (error) {
+                    const status = error.response?.status;
+
+                    this.dialogError =
+                        status === 403
+                            ? "Dir fehlt die Berechtigung, Vorlagen zu bearbeiten (Einstellungen › Vorlagen)."
+                            : status === 422
+                              ? Object.values(error.response.data.errors ?? {}).flat()[0] ?? "Bitte prüfe Deine Eingaben."
+                              : "Die Vorlage konnte nicht gespeichert werden. Bitte versuche es erneut.";
+                } finally {
+                    this.savingTemplate = false;
+                }
+            },
+
             async onPreview(e) {
                 const updateForm = this.$parent.$parent.$parent.$parent;
                 await updateForm.submitViaUpdateResourceAndContinueEditing(e);
-                let win = window.open(this.field.previewUrl + this.resourceId+'?watermark=1', "preview");
+                let win = window.open(this.field.previewUrl + this.resourceId + "?watermark=1", "preview");
                 win.focus();
                 setTimeout(() => {
                     document.querySelector("a[name='nova-form-text-editor']")?.scrollIntoView();
                 }, 2000);
             },
-            async fetchTemplates() {
-                this.templates = (
-                    await Nova.request().get(
-                        "/api/templates?category=" + this.field.templateCategory
-                    )
-                ).data.data;
-            },
-            async fetchTextTemplates() {
-                this.textTemplates = (
-                    await Nova.request().get(
-                        "/api/text_templates"
-                    )
-                ).data.data;
 
+            async fetchTemplates() {
+                if (!this.field.templateCategory) {
+                    return;
+                }
+
+                this.loadingTemplates = true;
+
+                try {
+                    const { data } = await Nova.request().get("/api/templates", {
+                        params: { all: 1, category: this.field.templateCategory },
+                    });
+
+                    this.templates = data.data;
+                    this.canCreateTemplates = !!data.meta?.can_create;
+                    this.templateCategories = data.meta?.categories ?? {};
+                } finally {
+                    this.loadingTemplates = false;
+                }
             },
+
+            async fetchTextTemplates() {
+                this.textTemplates = (await Nova.request().get("/api/text_templates")).data.data;
+            },
+
             addElement(type) {
-                this.editor.commands.insertContent([{
-                        type,
-                    },
-                    {
-                        type: "paragraph",
-                    },
-                ]);
-                this.editor.view.dom.focus();
+                this.editor.chain().focus().insertContent([{ type }, { type: "paragraph" }]).run();
             },
+
             addVariable(variable) {
-                this.editor
-                    .chain()
-                    .insertContent("{ " + variable + " }")
-                    .run();
+                this.editor.chain().focus().insertContent("{ " + variable + " }").run();
+            },
+
+            variablePreview(name) {
+                const value = this.field.variables?.[name];
+
+                if (value === null || value === undefined || value === "") {
+                    return null;
+                }
+
+                const text = String(value).replace(/<[^>]*>/g, " ").trim();
+
+                return text.length > 60 ? `${text.slice(0, 60)}…` : text;
+            },
+
+            /**
+             * Einträge des „/“-Menüs; wird pro Tastendruck neu gebaut, damit nachgeladene Daten erscheinen.
+             */
+            slashItems() {
+                const block = (id, title, icon, keywords, run) => ({ id, group: "Formatierung", title, icon, keywords, run });
+
+                const items = [
+                    block("paragraph", "Normaler Text", "¶", "absatz text", (chain) => chain.setParagraph().run()),
+                    block("heading-2", "Überschrift 2", "H2", "titel h2", (chain) => chain.setHeading({ level: 2 }).run()),
+                    block("heading-3", "Überschrift 3", "H3", "titel h3", (chain) => chain.setHeading({ level: 3 }).run()),
+                    block("heading-4", "Überschrift 4", "H4", "titel h4", (chain) => chain.setHeading({ level: 4 }).run()),
+                    block("bullet-list", "Aufzählung", ListBulletIcon, "liste punkte", (chain) => chain.toggleBulletList().run()),
+                    block("ordered-list", "Nummerierte Liste", NumberedListIcon, "liste nummern zahlen", (chain) => chain.toggleOrderedList().run()),
+                    block("blockquote", "Zitat", ChatBubbleBottomCenterTextIcon, "zitat quote", (chain) => chain.toggleBlockquote().run()),
+                    block("horizontal-rule", "Trennlinie", MinusIcon, "linie trenner", (chain) => chain.setHorizontalRule().run()),
+                ];
+
+                this.blockOptions.forEach(({ type, label }) =>
+                    items.push({
+                        id: `block-${type}`,
+                        group: "Variable Blöcke",
+                        title: label,
+                        icon: Squares2X2Icon,
+                        keywords: "block baustein",
+                        run: (chain) => chain.insertContent([{ type }, { type: "paragraph" }]).run(),
+                    })
+                );
+
+                this.variableNames.forEach((name) =>
+                    items.push({
+                        id: `variable-${name}`,
+                        group: "Platzhalter",
+                        title: `{ ${name} }`,
+                        subtitle: this.variablePreview(name),
+                        icon: VariableIcon,
+                        keywords: `${name} platzhalter variable`,
+                        run: (chain) => chain.insertContent(`{ ${name} }`).run(),
+                    })
+                );
+
+                this.textTemplates.forEach((textTemplate) =>
+                    items.push({
+                        id: `text-template-${textTemplate.id}`,
+                        group: "Textbausteine",
+                        title: textTemplate.name || textTemplate.shortcode,
+                        subtitle: textTemplate.text,
+                        icon: "¶",
+                        keywords: textTemplate.shortcode ?? "",
+                        run: (chain) => chain.insertContent({ type: "text", text: textTemplate.text }).run(),
+                    })
+                );
+
+                return items;
+            },
+
+            async applyFirstTemplate() {
+                await this.fetchTemplates();
+
+                const firstTemplate = this.matchingTemplates[0];
+
+                if (!this.field.selectFirstTemplate || !firstTemplate || String(this.value ?? "").length) {
+                    return;
+                }
+
+                const subject = this.subjectInput();
+                const isSubjectEmpty = !subject || subject.value.length === 0;
+
+                this.applyTemplate(firstTemplate, this.field.syncTemplateSubject !== false && isSubjectEmpty);
             },
         },
 
-        async mounted() {
-            await this.fetchTemplates();
-
-            this.placeholder = this.field.placeholder ?
-                this.field.placeholder :
-                this.field.extraAttributes ?
-                this.field.extraAttributes.placeholder :
-                "";
-
-            let extensions = [
-                Dropcursor,
-                Gapcursor,
-                CodeBlock,
-                Document,
-                Bold,
-                Italic,
-                Highlight,
-                Strike,
-                TextStyle,
-                FontSize,
-                Underline,
-                Subscript,
-                Superscript,
-                Heading.configure({
-                    levels: [2, 3, 4],
-                }),
-                Link,
-                Blockquote.extend({
-                    addAttributes() {
-                        return {
-                            ...this.parent?.(),
-                            dir: String,
-                        };
-                    },
-                }),
-                BulletList.extend({
-                    addAttributes() {
-                        return {
-                            ...this.parent?.(),
-                            dir: String,
-                        };
-                    },
-                }),
-                HorizontalRule,
-                ListItem,
-                OrderedList.extend({
-                    addAttributes() {
-                        return {
-                            ...this.parent?.(),
-                            dir: String,
-                        };
-                    },
-                }),
-                HardBreak,
-                Paragraph.extend({
-                    addAttributes() {
-                        return {
-                            ...this.parent?.(),
-                            dir: String,
-                            data: String,
-                        };
-                    },
-                }),
-                TextAlign.configure({
-                    types: ["heading", "paragraph"],
-                }),
-                UndoRedo,
-                Text,
-                ...resolveCustomExtensions(),
-            ];
-
+        mounted() {
             const context = this;
 
-            if (this.field.withTextTemplates) {
-                await this.fetchTextTemplates();
-                textTemplatesSearch.items = ({
-                    query
-                }) => {
-                    const fuse = new Fuse(this.textTemplates, {
-                        shouldSort: true,
-                        tokenize: true,
-                        threshold: 0.3,
-                        location: 0,
-                        distance: 100,
-                        limit: 5,
-                        maxPatternLength: 32,
-                        minMatchCharLength: 1,
-                        keys: ["text", "name","shortcode"],
-                    });
-                    return fuse.search(query);
-                };
-                extensions.push(Mention.configure({
-                    suggestion: textTemplatesSearch,
-                }));
-            }
             this.editor = new Editor({
-                extensions: extensions,
+                extensions: [
+                    Dropcursor,
+                    Gapcursor,
+                    CodeBlock,
+                    Document,
+                    Bold,
+                    Italic,
+                    Highlight,
+                    Strike,
+                    TextStyle,
+                    FontSize,
+                    Underline,
+                    Subscript,
+                    Superscript,
+                    Heading.configure({ levels: [2, 3, 4] }),
+                    Link,
+                    withDirAttribute(Blockquote),
+                    withDirAttribute(BulletList),
+                    HorizontalRule,
+                    ListItem,
+                    withDirAttribute(OrderedList),
+                    HardBreak,
+                    Paragraph.extend({
+                        addAttributes() {
+                            return {
+                                ...this.parent?.(),
+                                dir: String,
+                                data: String,
+                            };
+                        },
+                    }),
+                    TextAlign.configure({ types: ["heading", "paragraph"] }),
+                    UndoRedo,
+                    Text,
+                    SlashCommand.configure({ getItems: () => context.slashItems() }),
+                    VariableHighlight.configure({
+                        getVariables: () => (context.variableNames.length ? [...context.variableNames, "heute"] : []),
+                    }),
+                    ...resolveCustomExtensions(),
+                ],
                 content: this.contentWithTrailingParagraph,
                 onCreate({ editor }) {
                     try {
-                        let content = JSON.parse(context.value);
-                        editor.commands.setContent(content);
+                        editor.commands.setContent(JSON.parse(context.value));
                     } catch {}
+
+                    context.lastAppliedHtml = editor.getHTML();
                 },
                 onUpdate({ editor }) {
-                    if (context.saveAsJson) {
-                        context.updateValue(editor.getJSON());
-                    } else {
-                        context.updateValue(editor.getHTML());
-                    }
+                    context.updateValue(context.saveAsJson ? editor.getJSON() : editor.getHTML());
                 },
             });
 
-            if (this.field.selectFirstTemplate && !this.value.length) {
-                const isSubjectEmpty = !document.querySelector("[id^='subject']") ||
-                    document.querySelector("[id^='subject']").value.length === 0;
+            this.applyFirstTemplate();
 
-                this.selectTemplate(
-                    this.templates[0],
-                    this.field.syncTemplateSubject !== false && isSubjectEmpty
-                );
+            if (this.field.withTextTemplates) {
+                this.fetchTextTemplates();
             }
         },
 
@@ -638,6 +848,536 @@
                 background-color: #4b5563;
                 color: #f3f4f6;
             }
+        }
+    }
+
+    /*
+     * Editor-Chrome (Toolbar, Menüs, Bubble, Vorlagen). Eigenes Author-CSS statt Tailwind-Utilities:
+     * Das Package bringt kein eigenes Tailwind mit, und Teleport-Inhalte liegen außerhalb von .orlyapp.
+     */
+    .texteditor {
+        position: relative;
+
+        &__toolbar {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        &__content {
+            margin-top: 0.5rem;
+            padding-left: 0.75rem;
+            padding-right: 0.75rem;
+            min-height: 8rem;
+        }
+
+        &__hint {
+            margin-top: 0.375rem;
+            font-size: 0.75rem;
+            color: rgb(var(--colors-gray-500));
+
+            kbd {
+                padding: 0 0.3rem;
+                border: 1px solid rgb(var(--colors-gray-300));
+                border-bottom-width: 2px;
+                border-radius: 0.25rem;
+                font-family: inherit;
+                font-size: 0.7rem;
+                background: white;
+            }
+
+            @media (pointer: coarse) {
+                display: none;
+            }
+        }
+    }
+
+    .texteditor-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.25rem 0.5rem;
+        padding: 0.25rem;
+        border: 1px solid rgb(var(--colors-gray-200));
+        border-radius: 0.5rem;
+        background: rgb(var(--colors-gray-50));
+
+        &__format,
+        &__end {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.125rem;
+        }
+
+        &__end {
+            margin-left: auto;
+        }
+
+        &__divider {
+            width: 1px;
+            height: 1.25rem;
+            margin: 0 0.25rem;
+            background: rgb(var(--colors-gray-200));
+        }
+    }
+
+    .texteditor-tb-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.375rem;
+        min-width: 2rem;
+        height: 2rem;
+        padding: 0 0.375rem;
+        border-radius: 0.375rem;
+        color: rgb(var(--colors-gray-600));
+        font-size: 0.8125rem;
+        font-weight: 600;
+        line-height: 1;
+        white-space: nowrap;
+        transition: background-color 0.1s, color 0.1s;
+
+        &:hover:not(:disabled) {
+            color: rgb(var(--colors-gray-900));
+            background: rgb(var(--colors-gray-200));
+        }
+
+        &:focus-visible {
+            outline: 2px solid rgb(var(--colors-primary-500));
+            outline-offset: 1px;
+        }
+
+        &.is-active {
+            color: rgb(var(--colors-primary-600));
+            background: rgb(var(--colors-primary-100));
+        }
+
+        &:disabled {
+            opacity: 0.4;
+            cursor: default;
+        }
+
+        &.has-label {
+            padding: 0 0.5rem;
+        }
+
+        &__icon,
+        &__chevron {
+            width: 1.125rem;
+            height: 1.125rem;
+            flex: none;
+        }
+
+        &__chevron {
+            width: 0.875rem;
+            height: 0.875rem;
+            margin-left: -0.125rem;
+            opacity: 0.6;
+        }
+
+        &__glyph {
+            min-width: 1.125rem;
+            font-size: 0.875rem;
+            text-align: center;
+        }
+
+        /* Touch: größere Trefferflächen */
+        @media (pointer: coarse) {
+            min-width: 2.5rem;
+            height: 2.5rem;
+        }
+    }
+
+    .texteditor-tb-menu {
+        display: inline-flex;
+    }
+
+    .texteditor-popover {
+        z-index: 70;
+        min-width: 13rem;
+        max-width: min(24rem, calc(100vw - 16px));
+        overflow-y: auto;
+        padding: 0.25rem;
+        border: 1px solid rgb(var(--colors-gray-200));
+        border-radius: 0.5rem;
+        background: white;
+        box-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.15), 0 4px 10px -6px rgb(0 0 0 / 0.1);
+        color: rgb(var(--colors-gray-700));
+        font-size: 0.875rem;
+    }
+
+    .texteditor-menu-heading {
+        padding: 0.5rem 0.625rem 0.25rem;
+        font-size: 0.6875rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: rgb(var(--colors-gray-400));
+    }
+
+    .texteditor-menu-hint {
+        padding: 0.375rem 0.625rem 0.5rem;
+        font-size: 0.75rem;
+        color: rgb(var(--colors-gray-500));
+    }
+
+    .texteditor-menu-empty {
+        padding: 0.75rem 0.625rem;
+        color: rgb(var(--colors-gray-500));
+    }
+
+    .texteditor-menu-item {
+        display: flex;
+        width: 100%;
+        align-items: center;
+        gap: 0.625rem;
+        padding: 0.4375rem 0.625rem;
+        border-radius: 0.375rem;
+        text-align: left;
+
+        &:hover:not(:disabled),
+        &.is-selected {
+            background: rgb(var(--colors-gray-100));
+        }
+
+        &.is-active {
+            color: rgb(var(--colors-primary-600));
+            font-weight: 600;
+        }
+
+        &:disabled {
+            opacity: 0.4;
+            cursor: default;
+        }
+
+        &__icon {
+            width: 1.125rem;
+            height: 1.125rem;
+            flex: none;
+            color: rgb(var(--colors-gray-400));
+        }
+
+        &__glyph {
+            width: 1.125rem;
+            flex: none;
+            font-size: 0.8125rem;
+            font-weight: 700;
+            text-align: center;
+            color: rgb(var(--colors-gray-400));
+        }
+
+        &__text {
+            display: flex;
+            min-width: 0;
+            flex-direction: column;
+        }
+
+        &__label {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+
+            &.is-heading-2 { font-size: 1.125rem; font-weight: 700; }
+            &.is-heading-3 { font-size: 1rem; font-weight: 700; }
+            &.is-heading-4 { font-size: 0.9375rem; font-weight: 600; }
+
+            code {
+                font-size: 0.8125rem;
+                color: rgb(var(--colors-primary-600));
+            }
+        }
+
+        &__subtitle {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 0.75rem;
+            color: rgb(var(--colors-gray-500));
+        }
+
+        @media (pointer: coarse) {
+            padding-top: 0.625rem;
+            padding-bottom: 0.625rem;
+        }
+    }
+
+    .texteditor-slash {
+        width: 20rem;
+    }
+
+    .texteditor-variables {
+        width: 20rem;
+    }
+
+    .texteditor-bubble {
+        display: flex;
+        align-items: center;
+        padding: 0.25rem;
+        border: 1px solid rgb(var(--colors-gray-200));
+        border-radius: 0.5rem;
+        background: white;
+        box-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.15);
+        z-index: 40;
+
+        &__row,
+        &__link-form {
+            display: flex;
+            align-items: center;
+            gap: 0.125rem;
+        }
+
+        &__input {
+            width: min(18rem, 60vw);
+            height: 2rem;
+            padding: 0 0.5rem;
+            border: 1px solid rgb(var(--colors-gray-300));
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            background: white;
+
+            &:focus {
+                outline: 2px solid rgb(var(--colors-primary-500));
+                outline-offset: -1px;
+            }
+        }
+
+        &__href {
+            max-width: 16rem;
+            overflow: hidden;
+            padding: 0 0.5rem;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 0.8125rem;
+            color: rgb(var(--colors-primary-600));
+            text-decoration: underline;
+        }
+    }
+
+    .texteditor-loaded {
+        display: inline-flex;
+        max-width: 16rem;
+        align-items: center;
+        gap: 0.125rem;
+        padding-left: 0.625rem;
+        border: 1px solid rgb(var(--colors-primary-200));
+        border-radius: 9999px;
+        background: rgb(var(--colors-primary-50));
+
+        &__name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: rgb(var(--colors-primary-700, var(--colors-primary-600)));
+        }
+
+        .texteditor-tb-button {
+            min-width: 1.75rem;
+            height: 1.75rem;
+            border-radius: 9999px;
+        }
+
+        @media (max-width: 639px) {
+            max-width: 11rem;
+        }
+    }
+
+    .texteditor-templates {
+        display: flex;
+        width: 26rem;
+        flex-direction: column;
+        padding: 0;
+
+        &__header {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            border-bottom: 1px solid rgb(var(--colors-gray-100));
+        }
+
+        &__search-icon {
+            position: absolute;
+            left: 1.125rem;
+            width: 1rem;
+            height: 1rem;
+            color: rgb(var(--colors-gray-400));
+            pointer-events: none;
+        }
+
+        &__search {
+            width: 100%;
+            height: 2.25rem;
+            padding: 0 0.625rem 0 2rem;
+            border: 1px solid rgb(var(--colors-gray-300));
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            background: white;
+
+            &:focus {
+                outline: 2px solid rgb(var(--colors-primary-500));
+                outline-offset: -1px;
+            }
+        }
+
+        &__close {
+            display: inline-flex;
+            width: 2.25rem;
+            height: 2.25rem;
+            flex: none;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0.375rem;
+            color: rgb(var(--colors-gray-500));
+
+            svg {
+                width: 1.25rem;
+                height: 1.25rem;
+            }
+        }
+
+        &__list {
+            min-height: 0;
+            flex: 1 1 auto;
+            overflow-y: auto;
+            padding: 0.25rem;
+        }
+
+        &__hint {
+            margin: 0.25rem;
+            padding: 0.5rem 0.625rem;
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            color: rgb(var(--colors-gray-600));
+            background: rgb(var(--colors-gray-50));
+        }
+
+        &__category {
+            font-weight: 400;
+            color: rgb(var(--colors-gray-500));
+        }
+
+        &__footer {
+            padding: 0.25rem;
+            border-top: 1px solid rgb(var(--colors-gray-100));
+        }
+
+        /* Mobil: Sheet von unten, feste Position statt floating-ui */
+        &.is-sheet {
+            left: 0 !important;
+            right: 0 !important;
+            top: auto !important;
+            bottom: 0 !important;
+            width: 100%;
+            max-width: none;
+            max-height: 85vh !important;
+            height: 85vh;
+            border-radius: 1rem 1rem 0 0;
+            box-shadow: 0 -10px 40px rgb(0 0 0 / 0.25);
+        }
+    }
+
+    .nova-tiptap-editor .ProseMirror {
+        .texteditor-variable {
+            padding: 0.05rem 0.2rem;
+            border-radius: 0.25rem;
+            background: rgb(var(--colors-primary-100));
+            color: rgb(var(--colors-primary-700, var(--colors-primary-600)));
+            box-decoration-break: clone;
+        }
+
+        .texteditor-variable--unknown {
+            background: transparent;
+            color: inherit;
+            text-decoration: underline wavy rgb(var(--colors-red-500));
+            text-underline-offset: 3px;
+        }
+
+        .suggestion {
+            color: rgb(var(--colors-primary-600));
+        }
+    }
+
+    .dark {
+        .texteditor-toolbar,
+        .texteditor-popover,
+        .texteditor-bubble {
+            border-color: rgb(var(--colors-gray-700));
+            background: rgb(var(--colors-gray-800));
+            color: rgb(var(--colors-gray-200));
+        }
+
+        .texteditor-toolbar__divider {
+            background: rgb(var(--colors-gray-700));
+        }
+
+        .texteditor-tb-button {
+            color: rgb(var(--colors-gray-300));
+
+            &:hover:not(:disabled) {
+                color: white;
+                background: rgb(var(--colors-gray-700));
+            }
+
+            &.is-active {
+                color: rgb(var(--colors-primary-300));
+                background: rgb(var(--colors-gray-700));
+            }
+        }
+
+        .texteditor-menu-item {
+            &:hover:not(:disabled),
+            &.is-selected {
+                background: rgb(var(--colors-gray-700));
+            }
+
+            &.is-active {
+                color: rgb(var(--colors-primary-300));
+            }
+        }
+
+        .texteditor-menu-item__label code {
+            color: rgb(var(--colors-primary-300));
+        }
+
+        .texteditor-templates__header,
+        .texteditor-templates__footer {
+            border-color: rgb(var(--colors-gray-700));
+        }
+
+        .texteditor-templates__hint {
+            color: rgb(var(--colors-gray-300));
+            background: rgb(var(--colors-gray-900));
+        }
+
+        .texteditor-templates__search,
+        .texteditor-bubble__input {
+            border-color: rgb(var(--colors-gray-600));
+            background: rgb(var(--colors-gray-900));
+            color: rgb(var(--colors-gray-100));
+        }
+
+        .texteditor-loaded {
+            border-color: rgb(var(--colors-gray-600));
+            background: rgb(var(--colors-gray-700));
+
+            &__name {
+                color: rgb(var(--colors-gray-100));
+            }
+        }
+
+        .texteditor__hint kbd {
+            border-color: rgb(var(--colors-gray-600));
+            background: rgb(var(--colors-gray-800));
+        }
+
+        .nova-tiptap-editor .ProseMirror .texteditor-variable {
+            background: rgb(var(--colors-gray-700));
+            color: rgb(var(--colors-primary-300));
         }
     }
 </style>
