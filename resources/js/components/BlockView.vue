@@ -7,7 +7,7 @@
                     class="texteditor-block__handle"
                     draggable="true"
                     data-drag-handle
-                    title="Verschieben"
+                    v-tooltip="'Ziehen zum Verschieben'"
                     aria-label="Block verschieben"
                 >
                     <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -31,7 +31,7 @@
                         type="button"
                         class="texteditor-block__action texteditor-block__action--move"
                         :disabled="!canMoveUp"
-                        title="Nach oben"
+                        v-tooltip="'Nach oben'"
                         aria-label="Block nach oben verschieben"
                         @mousedown.prevent
                         @click="move(-1)"
@@ -44,7 +44,7 @@
                         type="button"
                         class="texteditor-block__action texteditor-block__action--move"
                         :disabled="!canMoveDown"
-                        title="Nach unten"
+                        v-tooltip="'Nach unten'"
                         aria-label="Block nach unten verschieben"
                         @mousedown.prevent
                         @click="move(1)"
@@ -56,7 +56,7 @@
                     <button
                         type="button"
                         class="texteditor-block__action texteditor-block__action--danger"
-                        title="Entfernen"
+                        v-tooltip="'Block entfernen'"
                         aria-label="Block entfernen"
                         @mousedown.prevent
                         @click="remove"

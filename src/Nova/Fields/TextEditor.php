@@ -18,7 +18,7 @@ class TextEditor extends Field
      * @param  (callable(mixed, mixed, ?string):mixed)|null  $resolveCallback
      * @return void
      */
-    public function __construct($name, $attribute = null, callable $resolveCallback = null)
+    public function __construct($name, $attribute = null, ?callable $resolveCallback = null)
     {
         $this->name = $name;
         $this->resolveCallback = $resolveCallback;
@@ -36,7 +36,6 @@ class TextEditor extends Field
     /**
      * Set the buttons that should be available in the menu.
      *
-     * @param  array  $buttons
      * @return $this
      */
     public function buttons(array $buttons)
@@ -56,7 +55,7 @@ class TextEditor extends Field
     public function defaultVariables()
     {
         return [
-            'heute' => '"' . now()->format('d.m.Y') . '"',
+            'heute' => '"'.now()->format('d.m.Y').'"',
         ];
     }
 
@@ -69,6 +68,37 @@ class TextEditor extends Field
         }
 
         return $this->withMeta(['variables' => $variables]);
+    }
+
+    /**
+     * Platzhalter abhängig von einem anderen Feld (z. B. der Vorlagen-Kategorie) anzeigen.
+     *
+     * Der Katalog wird komplett mitgeschickt; der Editor wechselt die Platzhalter clientseitig, sobald sich
+     * das Feld `$attribute` ändert — ohne dependsOn-Sync, der den Editor-Inhalt zurücksetzen würde.
+     *
+     * @param  array<string, list<array{label: string, variables: list<string>}>>  $catalog  Wert von `$attribute` → Platzhalter-Gruppen
+     * @return $this
+     */
+    public function variableCatalog(array $catalog, string $attribute, ?string $currentValue = null)
+    {
+        return $this->withMeta([
+            'variableCatalog' => [
+                'attribute' => $attribute,
+                'current' => $currentValue,
+                'groups' => (object) $catalog,
+            ],
+        ]);
+    }
+
+    /**
+     * Vorschau mit echten Datensätzen (Umschalter „Vorschau“ im Editor). Braucht einen registrierten
+     * `nova-texteditor.template_previewer` und `variableCatalog()` bzw. `templateCategory()` für die Kategorie.
+     *
+     * @return $this
+     */
+    public function templatePreview()
+    {
+        return $this->withMeta(['templatePreview' => filled(config('nova-texteditor.template_previewer'))]);
     }
 
     /**
@@ -91,7 +121,6 @@ class TextEditor extends Field
     {
         return $this->withMeta(['saveAsJson' => true]);
     }
-
 
     public function blocks(array $blocks)
     {
@@ -116,7 +145,6 @@ class TextEditor extends Field
     /**
      * Steuert, ob die Vorlagen-Auswahl (Dropdown und selectFirstTemplate) das Betreff-Feld setzt.
      *
-     * @param  bool  $sync
      * @return $this
      */
     public function syncTemplateSubject(bool $sync = true)
@@ -137,7 +165,6 @@ class TextEditor extends Field
     /**
      * Hydrate the given attribute on the model based on the incoming request.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
      * @param  string  $requestAttribute
      * @param  object  $model
      * @param  string  $attribute
@@ -150,7 +177,7 @@ class TextEditor extends Field
          */
         $value = $this->evaluateVariables($request[$requestAttribute], $model);
         $subjectValue = $this->evaluateVariables($request['subject'], $model);
-        if(data_get($this->meta, 'saveAsJson')) {
+        if (data_get($this->meta, 'saveAsJson')) {
             $value = json_decode($value);
         }
         $model->{$attribute} = $value;
@@ -169,10 +196,10 @@ class TextEditor extends Field
         $variables = array_merge($this->defaultVariables(), call_user_func($this->variableResolver, $model));
 
         foreach ($variables as $variable => $value) {
-            $attributeValue = str_replace('{{' . $variable . '}}', $value, $attributeValue);
-            $attributeValue = str_replace('{{ ' . $variable . ' }}', $value, $attributeValue);
-            $attributeValue = str_replace('{' . $variable . '}', $value, $attributeValue);
-            $attributeValue = str_replace('{ ' . $variable . ' }', $value, $attributeValue);
+            $attributeValue = str_replace('{{'.$variable.'}}', $value, $attributeValue);
+            $attributeValue = str_replace('{{ '.$variable.' }}', $value, $attributeValue);
+            $attributeValue = str_replace('{'.$variable.'}', $value, $attributeValue);
+            $attributeValue = str_replace('{ '.$variable.' }', $value, $attributeValue);
         }
 
         return $attributeValue;

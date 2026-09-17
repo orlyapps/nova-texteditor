@@ -73,10 +73,10 @@ const heading = (level) => ({
  */
 export function createToolbarItems({ onEditLink }) {
     const items = {
-        bold: { label: "Fett", icon: BoldIcon, primary: true, run: toggle("toggleBold"), active: (e) => e.isActive("bold") },
-        italic: { label: "Kursiv", icon: ItalicIcon, primary: true, run: toggle("toggleItalic"), active: (e) => e.isActive("italic") },
-        underline: { label: "Unterstrichen", icon: UnderlineIcon, primary: true, run: toggle("toggleUnderline"), active: (e) => e.isActive("underline") },
-        strike: { label: "Durchgestrichen", icon: StrikethroughIcon, run: toggle("toggleStrike"), active: (e) => e.isActive("strike") },
+        bold: { label: "Fett", icon: BoldIcon, shortcut: "ModB", primary: true, run: toggle("toggleBold"), active: (e) => e.isActive("bold") },
+        italic: { label: "Kursiv", icon: ItalicIcon, shortcut: "ModI", primary: true, run: toggle("toggleItalic"), active: (e) => e.isActive("italic") },
+        underline: { label: "Unterstrichen", icon: UnderlineIcon, shortcut: "ModU", primary: true, run: toggle("toggleUnderline"), active: (e) => e.isActive("underline") },
+        strike: { label: "Durchgestrichen", icon: StrikethroughIcon, shortcut: "ModShiftS", run: toggle("toggleStrike"), active: (e) => e.isActive("strike") },
         highlight: { label: "Markieren", icon: PaintBrushIcon, run: toggle("toggleHighlight"), active: (e) => e.isActive("highlight") },
         textStyle: {
             label: "Kleine Schrift",
@@ -138,8 +138,8 @@ export function createToolbarItems({ onEditLink }) {
         },
         history: {
             inline: [
-                { name: "undo", label: "Rückgängig", icon: ArrowUturnLeftIcon, run: (e) => e.chain().focus().undo().run(), disabled: (e) => !e.can().undo() },
-                { name: "redo", label: "Wiederholen", icon: ArrowUturnRightIcon, run: (e) => e.chain().focus().redo().run(), disabled: (e) => !e.can().redo() },
+                { name: "undo", label: "Rückgängig", icon: ArrowUturnLeftIcon, shortcut: "ModZ", run: (e) => e.chain().focus().undo().run(), disabled: (e) => !e.can().undo() },
+                { name: "redo", label: "Wiederholen", icon: ArrowUturnRightIcon, shortcut: "ModShiftZ", run: (e) => e.chain().focus().redo().run(), disabled: (e) => !e.can().redo() },
             ],
         },
     };

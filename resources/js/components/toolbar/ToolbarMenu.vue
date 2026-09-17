@@ -1,6 +1,6 @@
 <template>
     <div ref="reference" class="texteditor-tb-menu">
-        <toolbar-button :icon="icon" :label="label" :title="title" :active="open || active" :show-label="showLabel" @click="toggle">
+        <toolbar-button :icon="icon" :label="label" :title="open ? null : title" :tooltip="open ? '' : null" :active="open || active" :disabled="disabled" :show-label="showLabel" @click="toggle">
             <chevron-down-icon v-if="showLabel" class="texteditor-tb-button__chevron" />
         </toolbar-button>
 
@@ -44,6 +44,7 @@ export default {
         placement: { type: String, default: "bottom-start" },
         popoverClass: { type: [String, Object, Array], default: null },
         keepEditorFocus: { type: Boolean, default: true },
+        disabled: { type: Boolean, default: false },
     },
 
     data() {

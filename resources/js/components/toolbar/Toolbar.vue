@@ -10,6 +10,7 @@
                         :icon="item.icon"
                         :label="item.label"
                         :active="item.options.some((option) => option.active?.(editor))"
+                        :disabled="disabled"
                     >
                         <template #default="{ close }">
                             <button
@@ -31,14 +32,15 @@
                         v-else
                         :icon="item.icon"
                         :label="item.label"
+                        :shortcut="item.shortcut"
                         :active="item.active ? item.active(editor) : undefined"
-                        :disabled="item.disabled ? item.disabled(editor) : false"
+                        :disabled="disabled || (item.disabled ? item.disabled(editor) : false)"
                         @click="run(item)"
                     />
                 </template>
             </template>
 
-            <toolbar-menu v-if="overflowItems.length" :icon="moreIcon" label="Weitere Formatierungen" title="Mehr">
+            <toolbar-menu v-if="overflowItems.length" :icon="moreIcon" label="Weitere Formatierungen" title="Mehr" :disabled="disabled">
                 <template #default="{ close }">
                     <template v-for="item in overflowItems" :key="'more-' + item.name">
                         <div v-if="item.options" class="texteditor-menu-heading">{{ item.label }}</div>
@@ -85,6 +87,7 @@ export default {
     props: {
         editor: { type: Object, required: true },
         buttons: { type: Array, default: null },
+        disabled: { type: Boolean, default: false },
     },
 
     data() {

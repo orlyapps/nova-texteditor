@@ -3,8 +3,26 @@
         <template #field>
             <a name="nova-form-text-editor"></a>
             <div class="texteditor">
-                <toolbar v-if="editor" class="texteditor__toolbar" :editor="editor" :buttons="field.buttons" @edit-link="$refs.bubble?.startLinkEditing()">
+                <toolbar
+                    v-if="editor"
+                    class="texteditor__toolbar"
+                    :editor="editor"
+                    :buttons="field.buttons"
+                    :disabled="previewing"
+                    @edit-link="$refs.bubble?.startLinkEditing()"
+                >
                     <template #end="{ compact }">
+                        <toolbar-button
+                            v-if="field.templatePreview"
+                            :icon="previewing ? icons.PencilSquareIcon : icons.EyeIcon"
+                            :label="previewing ? 'Bearbeiten' : 'Vorschau'"
+                            :tooltip="previewing ? 'Zurück zum Bearbeiten' : 'Vorlage mit echten Daten ansehen'"
+                            :active="previewing"
+                            :show-label="!compact"
+                            @click="previewing = !previewing"
+                        />
+
+                        <template v-if="!previewing">
                         <toolbar-menu
                             v-if="blockOptions.length"
                             :icon="icons.Squares2X2Icon"
@@ -22,7 +40,7 @@
                         </toolbar-menu>
 
                         <toolbar-menu
-                            v-if="variableNames.length"
+                            v-if="variableNames.length || field.variableCatalog"
                             :icon="icons.VariableIcon"
                             label="Platzhalter"
                             title="Platzhalter einfügen"
@@ -30,13 +48,22 @@
                             popover-class="texteditor-variables"
                         >
                             <template #default="{ close }">
-                                <div class="texteditor-menu-hint">Platzhalter werden beim Speichern bzw. Versand ersetzt.</div>
-                                <button v-for="name in variableNames" :key="name" type="button" class="texteditor-menu-item" @click="addVariable(name); close()">
-                                    <span class="texteditor-menu-item__text">
-                                        <span class="texteditor-menu-item__label"><code>{ {{ name }} }</code></span>
-                                        <span v-if="variablePreview(name)" class="texteditor-menu-item__subtitle">{{ variablePreview(name) }}</span>
-                                    </span>
-                                </button>
+                                <div class="texteditor-menu-hint">{{ variableMenuHint }}</div>
+                                <template v-for="group in variableGroups" :key="group.label ?? 'variables'">
+                                    <div v-if="group.label" class="texteditor-menu-heading">{{ group.label }}</div>
+                                    <button
+                                        v-for="name in group.variables"
+                                        :key="`${group.label}-${name}`"
+                                        type="button"
+                                        class="texteditor-menu-item"
+                                        @click="addVariable(name); close()"
+                                    >
+                                        <span class="texteditor-menu-item__text">
+                                            <span class="texteditor-menu-item__label"><code>{ {{ name }} }</code></span>
+                                            <span v-if="variablePreview(name)" class="texteditor-menu-item__subtitle">{{ variablePreview(name) }}</span>
+                                        </span>
+                                    </button>
+                                </template>
                             </template>
                         </toolbar-menu>
 
@@ -52,29 +79,61 @@
                                 @save-new="openDialog('save')"
                             />
 
-                            <div v-if="loadedTemplate" class="texteditor-loaded" :title="`Geladene Vorlage: ${loadedTemplate.name}`">
-                                <span class="texteditor-loaded__name">{{ loadedTemplate.name }}</span>
+                            <div v-if="loadedTemplate" class="texteditor-loaded" :class="{ 'is-dirty': templateDirty }">
+                                <span
+                                    class="texteditor-loaded__name"
+                                    v-tooltip="templateDirty ? `„${loadedTemplate.name}“ – Text wurde seit dem Laden geändert` : `Geladene Vorlage: ${loadedTemplate.name}`"
+                                >
+                                    <span v-if="templateDirty" class="texteditor-loaded__dot" aria-hidden="true"></span>
+                                    {{ loadedTemplate.name }}
+                                </span>
+
+                                <button
+                                    v-if="loadedTemplate.can_update"
+                                    type="button"
+                                    class="texteditor-loaded__action"
+                                    v-tooltip="`Aktuellen Text${syncsSubject ? ' und Betreff' : ''} in „${loadedTemplate.name}“ übernehmen`"
+                                    @mousedown.prevent
+                                    @click="openDialog('overwrite')"
+                                >
+                                    <arrow-down-on-square-icon class="texteditor-loaded__action-icon" />
+                                    <span>Überschreiben</span>
+                                </button>
+                                <button
+                                    v-else-if="canCreateTemplates"
+                                    type="button"
+                                    class="texteditor-loaded__action"
+                                    v-tooltip="'Aktuellen Text als neue Vorlage speichern'"
+                                    @mousedown.prevent
+                                    @click="openDialog('save')"
+                                >
+                                    <plus-icon class="texteditor-loaded__action-icon" />
+                                    <span>Als neue speichern</span>
+                                </button>
 
                                 <toolbar-menu
-                                    v-if="loadedTemplate.can_update || canCreateTemplates"
-                                    :icon="icons.BookmarkSquareIcon"
-                                    label="Vorlage speichern"
+                                    v-if="loadedTemplate.can_update && canCreateTemplates"
+                                    :icon="icons.ChevronDownIcon"
+                                    label="Weitere Speicheroptionen"
                                     placement="bottom-end"
                                 >
                                     <template #default="{ close }">
-                                        <button v-if="loadedTemplate.can_update" type="button" class="texteditor-menu-item" @click="openDialog('overwrite'); close()">
-                                            <arrow-down-on-square-icon class="texteditor-menu-item__icon" />
-                                            <span class="texteditor-menu-item__label">„{{ loadedTemplate.name }}“ überschreiben…</span>
-                                        </button>
-                                        <button v-if="canCreateTemplates" type="button" class="texteditor-menu-item" @click="openDialog('save'); close()">
+                                        <button type="button" class="texteditor-menu-item" @click="openDialog('save'); close()">
                                             <plus-icon class="texteditor-menu-item__icon" />
                                             <span class="texteditor-menu-item__label">Als neue Vorlage speichern…</span>
                                         </button>
                                     </template>
                                 </toolbar-menu>
 
-                                <toolbar-button :icon="icons.XMarkIcon" label="Vorlagen-Verknüpfung lösen" @click="loadedTemplate = null" />
+                                <toolbar-button
+                                    :icon="icons.XMarkIcon"
+                                    label="Vorlage schließen"
+                                    tooltip="Verknüpfung zur Vorlage lösen – dein Text bleibt erhalten"
+                                    @click="loadedTemplate = null"
+                                />
                             </div>
+                        </template>
+
                         </template>
 
                         <toolbar-button
@@ -87,11 +146,13 @@
                     </template>
                 </toolbar>
 
-                <div class="nova-tiptap-editor texteditor__content form-input form-control-bordered w-full dark:bg-gray-900 dark:text-gray-100 dark:border-gray-700" :style="cssProps">
+                <template-preview v-if="previewing" :category="previewCategory" :get-content="previewContent" />
+
+                <div v-show="!previewing" class="nova-tiptap-editor texteditor__content form-input form-control-bordered w-full dark:bg-gray-900 dark:text-gray-100 dark:border-gray-700" :style="cssProps">
                     <editor-content :editor="editor" class="prose" style="max-width: none" />
                 </div>
 
-                <p v-if="editor && slashHint" class="texteditor__hint">
+                <p v-if="editor && slashHint && !previewing" class="texteditor__hint">
                     Tipp: Tippe <kbd>/</kbd> für {{ slashHint }}.
                 </p>
 
@@ -200,10 +261,11 @@
     import { Dropcursor, Gapcursor, UndoRedo } from "@tiptap/extensions";
     import {
         ArrowDownOnSquareIcon,
-        BookmarkSquareIcon,
+        ChevronDownIcon,
         ChatBubbleBottomCenterTextIcon,
         EyeIcon,
         ListBulletIcon,
+        PencilSquareIcon,
         MinusIcon,
         NumberedListIcon,
         PlusIcon,
@@ -219,6 +281,7 @@
     import { resolveCustomExtensions } from "../tiptap";
     import EditorBubbleMenu from "./EditorBubbleMenu.vue";
     import TemplatePicker from "./TemplatePicker.vue";
+    import TemplatePreview from "./TemplatePreview.vue";
     import Toolbar from "./toolbar/Toolbar.vue";
     import ToolbarButton from "./toolbar/ToolbarButton.vue";
     import ToolbarMenu from "./toolbar/ToolbarMenu.vue";
@@ -245,6 +308,7 @@
             PlusIcon,
             Squares2X2Icon,
             TemplatePicker,
+            TemplatePreview,
             Toolbar,
             ToolbarButton,
             ToolbarMenu,
@@ -265,7 +329,10 @@
                 dialogError: null,
                 savingTemplate: false,
                 templateForm: { name: "", category: null },
-                icons: { BookmarkSquareIcon, EyeIcon, Squares2X2Icon, VariableIcon, XMarkIcon },
+                icons: { ChevronDownIcon, EyeIcon, PencilSquareIcon, Squares2X2Icon, VariableIcon, XMarkIcon },
+                previewing: false,
+                templateDirty: false,
+                catalogValue: this.field.variableCatalog?.current ?? null,
             };
         },
 
@@ -320,8 +387,49 @@
                     .map(([type, label]) => ({ type, label }));
             },
 
+            /**
+             * Platzhalter-Gruppen: aus dem Katalog passend zum abhängigen Feld (z. B. Vorlagen-Kategorie),
+             * sonst die konkreten Variablen des Datensatzes als eine Gruppe.
+             *
+             * @returns {Array<{label: ?string, variables: string[], conditional?: boolean}>}
+             */
+            variableGroups() {
+                const catalog = this.field.variableCatalog;
+
+                if (catalog) {
+                    return catalog.groups?.[this.catalogValue] ?? [];
+                }
+
+                const names = Object.keys(this.field.variables ?? {});
+
+                return names.length ? [{ label: null, variables: names }] : [];
+            },
+
+            /**
+             * Kategorie der Vorschau: die im Formular gewählte (Vorlagen-Verwaltung) oder die erste des Feldes.
+             */
+            previewCategory() {
+                return this.field.variableCatalog ? this.catalogValue : this.categoryList[0] ?? null;
+            },
+
             variableNames() {
-                return Object.keys(this.field.variables ?? {});
+                return [...new Set(this.variableGroups.flatMap((group) => group.variables))];
+            },
+
+            variableMenuHint() {
+                if (this.field.variableCatalog && !this.catalogValue) {
+                    return "Wähle zuerst eine Kategorie, um die passenden Platzhalter zu sehen.";
+                }
+
+                if (!this.variableGroups.length) {
+                    return "Für diese Kategorie gibt es keine Platzhalter.";
+                }
+
+                if (this.variableGroups.some((group) => group.conditional)) {
+                    return "Ersetzt werden nur die Platzhalter des Bereichs, mit dem der Text verknüpft ist – z. B. Rechnungs-Platzhalter nur bei einer Rechnung.";
+                }
+
+                return "Platzhalter werden beim Speichern bzw. Versand ersetzt.";
             },
 
             slashHint() {
@@ -344,7 +452,7 @@
         },
 
         watch: {
-            "field.variables"() {
+            variableNames() {
                 this.editor?.commands.refreshVariableHighlight();
             },
         },
@@ -368,6 +476,10 @@
                 } else {
                     formData.append(this.fieldAttribute, String(this.value));
                 }
+            },
+
+            previewContent() {
+                return { text: this.editor.getHTML(), subject: this.subjectInput()?.value ?? null };
             },
 
             subjectInput() {
@@ -410,6 +522,7 @@
                 this.editor.commands.setContent(template.text, { emitUpdate: true });
                 this.loadedTemplate = template;
                 this.lastAppliedHtml = this.editor.getHTML();
+                this.templateDirty = false;
             },
 
             isEditedSinceLastApply() {
@@ -469,6 +582,7 @@
                     await this.fetchTemplates();
                     this.loadedTemplate = this.templates.find((template) => template.id === saved.id) ?? saved;
                     this.lastAppliedHtml = this.editor.getHTML();
+                    this.templateDirty = false;
                     this.closeDialog();
                     Nova.success(`Vorlage „${saved.name}“ ${verb}.`);
                 } catch (error) {
@@ -567,16 +681,18 @@
                     })
                 );
 
-                this.variableNames.forEach((name) =>
-                    items.push({
-                        id: `variable-${name}`,
-                        group: "Platzhalter",
-                        title: `{ ${name} }`,
-                        subtitle: this.variablePreview(name),
-                        icon: VariableIcon,
-                        keywords: `${name} platzhalter variable`,
-                        run: (chain) => chain.insertContent(`{ ${name} }`).run(),
-                    })
+                this.variableGroups.forEach((variableGroup) =>
+                    variableGroup.variables.forEach((name) =>
+                        items.push({
+                            id: `variable-${variableGroup.label}-${name}`,
+                            group: variableGroup.label ? `Platzhalter · ${variableGroup.label}` : "Platzhalter",
+                            title: `{ ${name} }`,
+                            subtitle: this.variablePreview(name),
+                            icon: VariableIcon,
+                            keywords: `${name} platzhalter variable ${variableGroup.label ?? ""}`,
+                            run: (chain) => chain.insertContent(`{ ${name} }`).run(),
+                        })
+                    )
                 );
 
                 this.textTemplates.forEach((textTemplate) =>
@@ -663,11 +779,22 @@
                     context.lastAppliedHtml = editor.getHTML();
                 },
                 onUpdate({ editor }) {
-                    context.updateValue(context.saveAsJson ? editor.getJSON() : editor.getHTML());
+                    const html = editor.getHTML();
+
+                    context.updateValue(context.saveAsJson ? editor.getJSON() : html);
+                    context.templateDirty = html !== context.lastAppliedHtml;
                 },
             });
 
             this.applyFirstTemplate();
+
+            if (this.field.variableCatalog) {
+                // Nova sendet `<attribute>-change` immer auch ohne Formular-Präfix; getFieldAttributeChangeEventName()
+                // fehlt im hier gebündelten laravel-nova-Mixin (npm 1.x).
+                this.catalogChangeEvent = `${this.field.variableCatalog.attribute}-change`;
+                this.onCatalogValueChange = (value) => (this.catalogValue = value || null);
+                Nova.$on(this.catalogChangeEvent, this.onCatalogValueChange);
+            }
 
             if (this.field.withTextTemplates) {
                 this.fetchTextTemplates();
@@ -675,6 +802,10 @@
         },
 
         beforeUnmount() {
+            if (this.catalogChangeEvent) {
+                Nova.$off(this.catalogChangeEvent, this.onCatalogValueChange);
+            }
+
             this.editor?.destroy();
         },
     };
@@ -1157,31 +1288,82 @@
 
     .texteditor-loaded {
         display: inline-flex;
-        max-width: 16rem;
+        max-width: 100%;
         align-items: center;
-        gap: 0.125rem;
-        padding-left: 0.625rem;
-        border: 1px solid rgb(var(--colors-primary-200));
-        border-radius: 9999px;
-        background: rgb(var(--colors-primary-50));
+        gap: 0.25rem;
+        padding: 0.125rem 0.125rem 0.125rem 0.625rem;
+        border: 1px solid rgb(var(--colors-gray-200));
+        border-radius: 0.5rem;
+        background: white;
 
         &__name {
+            display: inline-flex;
+            min-width: 0;
+            max-width: 12rem;
+            align-items: center;
+            gap: 0.375rem;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
             font-size: 0.75rem;
             font-weight: 600;
-            color: rgb(var(--colors-primary-700, var(--colors-primary-600)));
+            color: rgb(var(--colors-gray-600));
+        }
+
+        &__dot {
+            width: 0.5rem;
+            height: 0.5rem;
+            flex: none;
+            border-radius: 9999px;
+            background: rgb(var(--colors-yellow-500, var(--colors-primary-500)));
+        }
+
+        &__action {
+            display: inline-flex;
+            height: 1.75rem;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0 0.5rem;
+            border: 1px solid rgb(var(--colors-gray-300));
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            white-space: nowrap;
+            color: rgb(var(--colors-gray-700));
+            background: white;
+
+            &:hover {
+                border-color: rgb(var(--colors-primary-500));
+                color: rgb(var(--colors-primary-600));
+            }
+        }
+
+        &__action-icon {
+            width: 1rem;
+            height: 1rem;
+        }
+
+        /* Text seit dem Laden geändert: Überschreiben wird zur Hauptaktion. */
+        &.is-dirty &__action {
+            border-color: rgb(var(--colors-primary-500));
+            color: white;
+            background: rgb(var(--colors-primary-500));
+
+            &:hover {
+                background: rgb(var(--colors-primary-600));
+                color: white;
+            }
         }
 
         .texteditor-tb-button {
             min-width: 1.75rem;
             height: 1.75rem;
-            border-radius: 9999px;
         }
 
         @media (max-width: 639px) {
-            max-width: 11rem;
+            &__name {
+                max-width: 7rem;
+            }
         }
     }
 
@@ -1281,6 +1463,155 @@
         }
     }
 
+    .texteditor-preview {
+        margin-top: 0.5rem;
+
+        &__bar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        &__field {
+            display: flex;
+            min-width: 10rem;
+            flex-direction: column;
+            gap: 0.25rem;
+
+            &--grow {
+                flex: 1 1 14rem;
+            }
+        }
+
+        &__label {
+            font-size: 0.6875rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: rgb(var(--colors-gray-500));
+        }
+
+        &__select {
+            width: 100%;
+            height: 2.25rem;
+            padding: 0 0.625rem;
+            border: 1px solid rgb(var(--colors-gray-300));
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            background: white;
+
+            &:focus {
+                outline: 2px solid rgb(var(--colors-primary-500));
+                outline-offset: -1px;
+            }
+        }
+
+        &__combobox {
+            position: relative;
+        }
+
+        &__list {
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            right: 0;
+            max-width: none;
+            max-height: 18rem;
+        }
+
+        &__body {
+            min-height: 8rem;
+            padding: 1rem 1.25rem;
+        }
+
+        &__meta {
+            display: grid;
+            grid-template-columns: max-content 1fr;
+            gap: 0.25rem 0.75rem;
+            margin: 0 0 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid rgb(var(--colors-gray-200));
+            font-size: 0.875rem;
+
+            &:empty {
+                display: none;
+            }
+
+            dt {
+                font-weight: 600;
+                color: rgb(var(--colors-gray-500));
+            }
+
+            dd {
+                margin: 0;
+            }
+        }
+
+        &__notice {
+            margin: 0 0 0.75rem;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.8125rem;
+            color: rgb(var(--colors-gray-600));
+            background: rgb(var(--colors-gray-100));
+
+            &--error {
+                color: rgb(var(--colors-red-700, var(--colors-red-600)));
+                background: rgb(var(--colors-red-50));
+            }
+        }
+
+        &__bar &__notice {
+            margin: 0;
+        }
+
+        &__skeleton {
+            display: flex;
+            flex-direction: column;
+            gap: 0.625rem;
+
+            span {
+                height: 0.875rem;
+                border-radius: 0.25rem;
+                background: rgb(var(--colors-gray-200));
+                animation: texteditor-pulse 1.2s ease-in-out infinite;
+
+                &:nth-child(1) { width: 40%; }
+                &:nth-child(2) { width: 90%; }
+                &:nth-child(3) { width: 75%; }
+            }
+        }
+    }
+
+    @keyframes texteditor-pulse {
+        50% {
+            opacity: 0.45;
+        }
+    }
+
+    .dark .texteditor-preview {
+        &__select {
+            border-color: rgb(var(--colors-gray-600));
+            background: rgb(var(--colors-gray-900));
+            color: rgb(var(--colors-gray-100));
+        }
+
+        &__meta {
+            border-color: rgb(var(--colors-gray-700));
+        }
+
+        &__notice {
+            color: rgb(var(--colors-gray-300));
+            background: rgb(var(--colors-gray-800));
+        }
+
+        &__skeleton span {
+            background: rgb(var(--colors-gray-700));
+        }
+    }
+
     .nova-tiptap-editor .ProseMirror {
         .texteditor-variable {
             padding: 0.05rem 0.2rem;
@@ -1363,10 +1694,22 @@
 
         .texteditor-loaded {
             border-color: rgb(var(--colors-gray-600));
-            background: rgb(var(--colors-gray-700));
+            background: rgb(var(--colors-gray-800));
 
             &__name {
-                color: rgb(var(--colors-gray-100));
+                color: rgb(var(--colors-gray-200));
+            }
+
+            &__action {
+                border-color: rgb(var(--colors-gray-600));
+                color: rgb(var(--colors-gray-200));
+                background: rgb(var(--colors-gray-700));
+            }
+
+            &.is-dirty .texteditor-loaded__action {
+                border-color: rgb(var(--colors-primary-500));
+                color: white;
+                background: rgb(var(--colors-primary-600));
             }
         }
 
